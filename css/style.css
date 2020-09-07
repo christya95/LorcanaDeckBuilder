@@ -1,0 +1,281 @@
+/* Author: Josua Christyanton
+Date: June 20th 2020
+Description: CSS styling for Arkknights website. */
+
+h1 {
+    font-family: h1Font;
+    font-size: 4rem;
+    text-align: center;
+    color: navy;
+}
+
+h2{
+    color:rgb(252, 252, 252);
+}
+
+body {
+    background-color: rgb(128, 128, 128);
+    background-size: cover;
+}
+
+#player1 {
+    grid-area: player1;
+}
+
+#player2 {
+    grid-area: player2;
+}
+
+#player3 {
+    grid-area: player3;
+}
+
+#player4 {
+    grid-area: player4;
+}
+
+#player5 {
+    grid-area: player5;
+}
+
+#player6 {
+    grid-area: player6;
+}
+
+#player7 {
+    grid-area: player7;
+}
+
+#player8 {
+    grid-area: player8;
+}
+
+#player9 {
+    grid-area: player9;
+}
+
+#player10 {
+    grid-area: player10;
+}
+
+#player11 {
+    grid-area: player11;
+}
+
+#player12 {
+    grid-area: player12;
+}
+
+.grid-container-players {
+    display: grid;
+    grid-template-areas: 'player1 player3 player5 player7 player9 player11' 'player2 player4 player6 player8 player10 player12';
+    grid-gap: 10px;
+    border: 3px solid white;
+    border-radius: 20px;
+    background-color: #252525;
+    padding: 10px;
+}
+
+.grid-container-players>div {
+    background-color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    padding: 0.2em 0;
+    border-radius: 1em;
+    font-family: h1Font;
+    font-size: 1rem;
+    font-weight: bold;
+    color: navy;
+}
+
+.team {
+    grid-area: team;
+}
+
+.stats {
+    grid-area: stats;
+}
+
+#filters {
+    grid-area: filters;
+}
+
+.menu {
+    grid-area: menu;
+}
+
+.grid-container-layout {
+    display: grid;
+    grid-template-areas: 'team stats' 'filters stats' 'menu stats';
+    grid-gap: 10px;
+    border: 3px solid white;
+    border-radius: 20px;
+    background-color: #252525;
+    padding: 10px;
+}
+
+.art {
+    /* background-image: url('../resources/question-mark.jpg'); */
+    background-color: transparent;
+    background-size: contain;
+    width: 125px;
+    height: 125px;
+    padding: 0 0 0;
+    text-indent: 0;
+    background-origin: padding-box;
+    text-align: center
+}
+
+.filters {
+    background-color: #252525;
+    border: 3px solid white;
+    box-shadow: 0 0 10px #2c2c2c;
+    color: white;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.filters ul {
+    list-style-type: none;
+    text-align: center;
+    margin: 0;
+}
+
+.filters ul li {
+    display: inline-block;
+    width: 130px;
+}
+
+.filters ul li:hover {
+    background-color: #6ecdf3;
+}
+
+.filters ul li a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 10px 0;
+    display: block;
+}
+
+.top_menu {
+    background-color: #252525;
+    border: 3px solid white;
+    box-shadow: 0 0 10px #2c2c2c;
+    color: white;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.top_menu ul {
+    list-style-type: none;
+    text-align: center;
+    margin: 0;
+}
+
+.top_menu ul li {
+    display: inline-block;
+    width: 130px;
+}
+
+.top_menu ul li:hover {
+    background-color: #6ecdf3;
+}
+
+.top_menu ul li a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 10px 0;
+    display: block;
+}
+
+.menu-container {
+    grid-gap: 10px;
+    border: 3px solid white;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+}
+
+.stats-container {
+    height: 95%;
+    border: 3px solid white;
+    background-color: rgba(250, 120, 116, 0.8);
+    padding: 10px;
+}
+
+.star1 {
+    /* background-image: url(../resources/test.png); */
+    display:inline-block;
+    background-repeat:no-repeat;
+    background-origin:content-box;
+    margin-bottom: 0.5em;
+    width:125px;
+    height:125px;
+    border: solid black;
+    background-color:grey;
+    
+}
+
+.star2 {
+    /* background-image: url(../resources/test.png); */
+    display:inline-block;
+    background-repeat:no-repeat;
+    background-origin:content-box;
+    margin-bottom: 0.5em;
+    width:125px;
+    height:125px;
+    border: solid black;
+    background-color:greenyellow;
+}
+
+.star3 {
+    /* background-image: url(../resources/test.png); */
+    display:inline-block;
+    background-repeat:no-repeat;
+    background-origin:content-box;
+    margin-bottom: 0.5em;
+    width:125px;
+    height:125px;
+    border: solid black;
+    background-color:lightskyblue;
+}
+
+.star4 {
+    /* background-image: url(../resources/test.png); */
+    display:inline-block;
+    background-repeat:no-repeat;
+    background-origin:content-box;
+    margin-bottom: 0.5em;
+    width:125px;
+    height:125px;
+    border: solid black;
+    background-color:rgb(85, 0, 85);
+}
+
+.star5 {
+    /* background-image: url(../resources/test.png); */
+    display:inline-block;
+    background-repeat:no-repeat;
+    background-origin:content-box;
+    margin-bottom: 0.5em;
+    width:125px;
+    height:125px;
+    border: solid black;
+    background-color:gold;
+}
+
+.star6 {
+    /* background-image: url(../resources/test.png); */
+    display:inline-block;
+    background-repeat:no-repeat;
+    background-origin:content-box;
+    margin-bottom: 0.5em;
+    width:125px;
+    height:125px;
+    border: solid black;
+    background-color:orange;
+}
+
+.menu-row-list {
+    padding-left: 4em;
+}
