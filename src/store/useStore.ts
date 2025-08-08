@@ -14,6 +14,7 @@ interface State {
   selectedDeckId: number | null;
   query: string;
   filters: Filters;
+  setFilters: (f: Filters) => void;
   load: () => Promise<void>;
   search: (q: string) => Card[];
   addCard: (deckId: number, cardId: number) => void;
@@ -32,6 +33,7 @@ export const useStore = create<State>((set, get) => ({
   selectedDeckId: null,
   query: '',
   filters: { inks: [], rarities: [], types: [], sets: [], cost: [0, 10] },
+  setFilters: (f: Filters) => set({ filters: f }),
   load: async () => {
     const { cards, index } = await loadCards();
     const decks = await db.decks.toArray();

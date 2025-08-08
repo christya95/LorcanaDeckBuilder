@@ -1,8 +1,17 @@
+import { Stack, Typography, Box, Link } from '@mui/material';
+
 export default function About() {
   return (
-    <div className="p-4 space-y-2">
-      <h2 className="text-2xl font-bold">About</h2>
-      <p>Data from <a href="https://github.com/LorcanaJSON/LorcanaJSON" className="text-aurora">LorcanaJSON</a>. Not affiliated with Disney.</p>
-    </div>
+    <Stack spacing={2} py={4} alignItems="center" textAlign="center">
+      <Box component="img" src="/art/hero.jpg" alt="Hero" loading="lazy" sx={{ maxWidth: '100%', borderRadius: 2 }} />
+      <Typography variant="h4">About</Typography>
+      <Typography>
+        Data from{' '}
+        <Link href="https://github.com/LorcanaJSON/LorcanaJSON" target="_blank" rel="noopener">
+          LorcanaJSON
+        </Link>
+        . Not affiliated with Disney.
+      </Typography>
+    </Stack>
   );
 }
