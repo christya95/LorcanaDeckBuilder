@@ -3,16 +3,26 @@
 @tailwind utilities;
 
 body {
-  color: #f8fafc;
-  background-color: #0b1e39;
-  min-height: 100vh;
-  background-image: radial-gradient(white, rgba(255,255,255,0.2) 2px, transparent 4px), radial-gradient(white, rgba(255,255,255,0.15) 1px, transparent 3px);
-  background-position: 0 0, 50px 50px;
-  background-size: 100px 100px;
-  animation: stars 60s linear infinite;
+  @apply text-stardust bg-midnight min-h-screen relative;
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.1), transparent 60%) #0b1e39;
 }
 
-@keyframes stars {
-  from { background-position: 0 0, 50px 50px; }
-  to { background-position: -10000px 0, -9950px 50px; }
+body::after {
+  content: '';
+  position: fixed;
+  top: 25%;
+  left: 60%;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 8px rgba(255,255,255,0.8);
+  opacity: 0.1;
+  animation: sparkle 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sparkle {
+  0%,100% { transform: translateY(0) scale(0.8); opacity: 0.1; }
+  50% { transform: translateY(-10px) scale(1); opacity: 0.15; }
 }

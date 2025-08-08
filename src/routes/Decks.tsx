@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import Button from '../components/ui/Button';
 
 export default function Decks() {
   const decks = useStore(s => s.decks);
@@ -9,8 +9,8 @@ export default function Decks() {
       <ul className="space-y-1">
         {decks.map(d => (
           <li key={d.id} className="glass rounded p-2 flex justify-between">
-            <span>{d.name}</span>
-            <Link to={`/builder?id=${d.id}`} className="text-aurora">Open</Link>
+              <span>{d.name}</span>
+              <Button to={`/builder?id=${d.id}`} size="sm" variant="secondary">Open</Button>
           </li>
         ))}
       </ul>

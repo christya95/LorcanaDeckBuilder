@@ -1,17 +1,39 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import Button from '../components/ui/Button';
 
 export default function Home() {
   return (
-    <div className="text-center space-y-4 py-10">
-      <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-4xl font-bold">
+    <div className="relative overflow-hidden py-20 flex flex-col items-center text-center space-y-6">
+      <motion.span
+        className="absolute top-1/4 left-2/3 w-2 h-2 rounded-full bg-white opacity-10"
+        animate={{ y: [-8, 8] }}
+        transition={{ duration: 14, repeat: Infinity, repeatType: 'reverse' }}
+      />
+      <motion.h1
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="text-4xl font-bold"
+      >
         Lorcana Builder
       </motion.h1>
-      <p>Search cards and build decks.</p>
-      <div className="space-x-4">
-        <Link to="/cards" className="bg-gold text-midnight px-4 py-2 rounded-2xl">Browse Cards</Link>
-        <Link to="/builder" className="bg-aurora text-midnight px-4 py-2 rounded-2xl">Build a Deck</Link>
-      </div>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="max-w-md"
+      >
+        Search every card and craft your dream deck.
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="flex gap-4"
+      >
+        <Button to="/cards">Browse Cards</Button>
+        <Button to="/builder" variant="secondary">Build a Deck</Button>
+      </motion.div>
     </div>
   );
 }

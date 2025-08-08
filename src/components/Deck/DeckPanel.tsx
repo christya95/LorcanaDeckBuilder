@@ -1,5 +1,6 @@
 import { useStore } from '../../store/useStore';
 import DeckRow from './DeckRow';
+import Button from '../ui/Button';
 
 export default function DeckPanel({ deckId }: { deckId: number }) {
   const cards = useStore(s => s.cards);
@@ -23,8 +24,8 @@ export default function DeckPanel({ deckId }: { deckId: number }) {
         })}
       </div>
       <div className="flex gap-2">
-        <button onClick={() => { navigator.clipboard.writeText(exportDeck(deckId)); }} className="bg-aurora text-midnight rounded px-2">Export</button>
-        <button onClick={handleSave} className="bg-gold text-midnight rounded px-2">Save</button>
+        <Button onClick={() => { navigator.clipboard.writeText(exportDeck(deckId)); }} variant="secondary" size="sm">Export</Button>
+        <Button onClick={handleSave} size="sm">Save</Button>
       </div>
     </div>
   );

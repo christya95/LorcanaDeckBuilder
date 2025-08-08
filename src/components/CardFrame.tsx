@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { Card } from '../types';
 import { useStore } from '../store/useStore';
+import Button from './ui/Button';
 
 interface Props {
   card: Card;
@@ -19,7 +20,7 @@ export default function CardFrame({ card, deckId }: Props) {
       <div className="flex items-center justify-between">
         <span className="font-semibold text-sm">{card.name}</span>
         {deckId !== undefined && (
-          <button className="text-xs bg-gold text-midnight rounded px-2" onClick={() => add(deckId, card.id)}>Add</button>
+          <Button size="sm" onClick={() => add(deckId, card.id)}>Add</Button>
         )}
       </div>
     </motion.div>
