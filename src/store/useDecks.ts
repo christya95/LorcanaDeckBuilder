@@ -61,6 +61,10 @@ export const useDecks = () => {
     });
   };
 
+  /**
+   * Computes deck statistics including inkable/uninkable counts
+   * Properly handles the inkable property from card data
+   */
   function computeStats(rows: { count: number; snapshot: Card }[]) {
     const stats = {
       total: 0,
@@ -69,18 +73,45 @@ export const useDecks = () => {
       types: {} as Record<string, number>,
       curve: Array.from({ length: 9 }, (_, i) => ({ cost: i < 8 ? String(i + 1) : '9+', count: 0 })),
     };
-    const isInkable = (c: Card) => c.inkable ?? !/uninkable/i.test(c.text || '');
+
+    // Improved inkable detection logic
+    const isInkable = (c: Card): boolean => {
+      // If inkable property is explicitly set, use it
+      if (c.inkable !== undefined) {
+        return c.inkable !== false;
+      }
+      
+      // Fallback: check if card text contains "uninkable"
+      if (c.text) {
+        return !/uninkable/i.test(c.text);
+      }
+      
+      // Default to inkable if no information available
+      return true;
+    };
+
     for (const { count, snapshot } of rows) {
       stats.total += count;
-      if (isInkable(snapshot)) stats.inkable += count; else stats.uninkable += count;
+      
+      // Count inkable vs uninkable cards
+      if (isInkable(snapshot)) {
+        stats.inkable += count;
+      } else {
+        stats.uninkable += count;
+      }
+      
+      // Count by type
       const type = snapshot.type?.split('/')[0] || 'Other';
       stats.types[type] = (stats.types[type] || 0) + count;
+      
+      // Count by cost curve
       const cost = snapshot.ink_cost ?? 0;
       if (cost >= 1) {
         const idx = cost >= 9 ? 8 : cost - 1;
         stats.curve[idx].count += count;
       }
     }
+    
     return stats;
   }
 
@@ -107,5 +138,5 @@ export const useDecks = () => {
     }));
   };
 
-  return { selectedDeckId, decks, inc, dec, addToSelectedOrPrompt, countInSelectedDeck, deckCards, stats, saveDeck };
+  return { selectedDeckId, decks, deckLists, inc, dec, addToSelectedOrPrompt, countInSelectedDeck, deckCards, stats, saveDeck };
 };
