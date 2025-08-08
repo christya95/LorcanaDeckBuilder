@@ -1,19 +1,27 @@
 import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useDecks } from '../store/useDecks';
+import { useState } from 'react';
+import SaveDeckDialog from './SaveDeckDialog';
 
 export default function DeckPreview() {
-  const { selectedDeckId, deckCards, inc, dec, stats } = useDecks();
+  const { selectedDeckId, decks, deckCards, inc, dec, stats, saveDeck } = useDecks();
+  const [open, setOpen] = useState(false);
   const rows = deckCards(selectedDeckId || undefined);
   const s = stats();
+  const deck = decks.find(d => d.id === selectedDeckId) || { name: undefined } as any;
 
   return (
     <Box sx={{ p: 2, width: 300 }}>
-      <Typography variant="h6" gutterBottom>
-        Deck ({s.total})
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+        <Typography variant="h6">{deck.name ?? 'Unsaved Deck'}</Typography>
+        <IconButton size="small" onClick={() => setOpen(true)}>
+          <SaveOutlinedIcon />
+        </IconButton>
+      </Box>
       <Stack spacing={1} mb={2}>
         {rows.map(r => (
           <Stack key={r.cardId} direction="row" justifyContent="space-between" alignItems="center">
@@ -51,6 +59,7 @@ export default function DeckPreview() {
           </BarChart>
         </ResponsiveContainer>
       </Box>
+      <SaveDeckDialog open={open} onClose={() => setOpen(false)} onSave={(name) => saveDeck(name)} />
     </Box>
   );
 }

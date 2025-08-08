@@ -1,5 +1,6 @@
 import { useStore } from './useStore';
 import type { Card } from '../types';
+import { db } from '../lib/dexie';
 
 export const useDecks = () => {
   const selectedDeckId = useStore(s => s.selectedDeckId);
@@ -83,5 +84,26 @@ export const useDecks = () => {
 
   const stats = () => computeStats(deckCards());
 
-  return { selectedDeckId, inc, dec, addToSelectedOrPrompt, countInSelectedDeck, deckCards, stats };
+  const saveDeck = async (name: string) => {
+    const id = selectedDeckId ?? Date.now();
+    const list = deckLists[id] || {};
+    const meta = decks.find(d => d.id === id);
+    const deck = { id, name, createdAt: meta?.createdAt ?? Date.now(), updatedAt: Date.now() };
+    await db.decks.put(deck);
+    await db.deckCards.where('deckId').equals(id).delete();
+    await Promise.all(
+      Object.entries(list).map(([cardId, count]) =>
+        db.deckCards.add({ deckId: id, cardId: Number(cardId), count, snapshot: {} })
+      )
+    );
+    useStore.setState(state => ({
+      decks: state.decks.some(d => d.id === id)
+        ? state.decks.map(d => (d.id === id ? deck : d))
+        : [...state.decks, deck],
+      deckLists: { ...state.deckLists, [id]: list },
+      selectedDeckId: id,
+    }));
+  };
+
+  return { selectedDeckId, decks, inc, dec, addToSelectedOrPrompt, countInSelectedDeck, deckCards, stats, saveDeck };
 };
