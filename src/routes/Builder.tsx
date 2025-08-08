@@ -16,9 +16,12 @@ export default function Builder() {
   useEffect(() => { load(); }, [load]);
 
   const filtered = (() => {
-    let result = cards;
+    let result = query ? useStore.getState().search(query) : cards;
     if (filters.inks.length) result = result.filter(c => filters.inks.includes(c.ink));
-    return query ? useStore.getState().search(query) : result;
+    if (filters.rarities.length) result = result.filter(c => filters.rarities.includes(c.rarity));
+    const [minCost, maxCost] = filters.cost;
+    result = result.filter(c => c.ink_cost >= minCost && c.ink_cost <= maxCost);
+    return result;
   })();
 
   return (

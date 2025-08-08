@@ -21,4 +21,11 @@ describe('export/import deck', () => {
     expect(list[1]).toBe(2);
     expect(list[2]).toBe(1);
   });
+
+  it('imports deck ignoring case and dashes', () => {
+    const text = '2 MICKEY MOUSE BRAVE LITTLE TAILOR\n1 elsa – snow queen';
+    const list = importDeck(text, cards);
+    expect(list[1]).toBe(2);
+    expect(list[2]).toBe(1);
+  });
 });
