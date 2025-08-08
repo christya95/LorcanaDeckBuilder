@@ -2,6 +2,7 @@ import { db } from '../lib/dexie';
 import { buildIndex } from '../lib/elastic';
 import type { Card } from '../types';
 import elasticlunr from 'elasticlunr';
+import { performance } from '../utils/performance';
 
 // Updated set codes to match what's actually available in the repository
 const SETS = ["TFC", "ROTF", "ITI", "UR", "SDS", "INK"];
@@ -36,22 +37,35 @@ function normalize(cards: Card[]): Card[] {
 }
 
 export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.Index<Card> }> {
+  const endTimer = performance.startTimer('Total card loading');
+  
+  // Check cache first
   const cached = await db.cards.toArray();
   if (cached && cached.length) {
     console.log(`Using ${cached.length} cached cards`);
     const index = buildIndex(cached);
+    endTimer();
     return { cards: cached, index };
   }
 
-  let all: Card[] = [];
-  for (const set of SETS) {
+  console.log('No cached cards found, loading from external sources...');
+  
+  // Load all sets in parallel for better performance
+  const setPromises = SETS.map(async (set) => {
+    const setTimer = performance.startTimer(`Loading set ${set}`);
     const data = await fetchSet(set);
     if (data) {
       const setCards = data.cards || data;
-      all = all.concat(setCards);
       console.log(`Added ${setCards.length} cards from ${set}`);
+      setTimer();
+      return setCards;
     }
-  }
+    setTimer();
+    return [];
+  });
+
+  const setResults = await Promise.all(setPromises);
+  let all: Card[] = setResults.flat();
 
   if (!all.length) {
     console.log('No cards loaded from external sources, trying local data');
@@ -66,9 +80,18 @@ export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.I
 
   const cards = normalize(all);
   if (cards.length) {
-    await db.cards.bulkPut(cards);
-    console.log(`Cached ${cards.length} cards`);
+    // Cache cards in background to avoid blocking
+    db.cards.bulkPut(cards).then(() => {
+      console.log(`Cached ${cards.length} cards`);
+    }).catch(error => {
+      console.error('Failed to cache cards:', error);
+    });
   }
+  
+  const indexTimer = performance.startTimer('Building search index');
   const index = buildIndex(cards);
+  indexTimer();
+  
+  endTimer();
   return { cards, index };
 }

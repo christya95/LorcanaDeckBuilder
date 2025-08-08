@@ -3,12 +3,12 @@ import type { Card, DeckList, Filters, DeckMeta } from '../types';
 import { loadCards } from '../data/lorcana';
 import { exportDeck as doExport, importDeck as doImport } from '../lib/export';
 import { db } from '../lib/dexie';
-import type elasticlunr from 'elasticlunr';
 
 interface State {
   cards: Card[];
-  index: elasticlunr.Index<Card> | null;
+  index: any; // Changed from elasticlunr.Index<Card> | null due to TS namespace issue
   indexReady: boolean;
+  loading: boolean;
   decks: DeckMeta[];
   deckLists: Record<number, DeckList>;
   selectedDeckId: number | null;
@@ -28,6 +28,7 @@ export const useStore = create<State>((set, get) => ({
   cards: [],
   index: null,
   indexReady: false,
+  loading: false,
   decks: [],
   deckLists: {},
   selectedDeckId: null,
@@ -35,20 +36,34 @@ export const useStore = create<State>((set, get) => ({
   filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' },
   setFilters: (f: Filters) => set({ filters: f }),
   load: async () => {
-    const { cards, index } = await loadCards();
-    const decks = await db.decks.toArray();
-    const deckLists: Record<number, DeckList> = {};
-    for (const deck of decks) {
-      const entries = await db.deckCards.where('deckId').equals(deck.id!).toArray();
-      deckLists[deck.id!] = Object.fromEntries(entries.map(e => [e.cardId, e.count]));
+    set({ loading: true });
+    try {
+      const { cards, index } = await loadCards();
+      const decks = await db.decks.toArray();
+      const deckLists: Record<number, DeckList> = {};
+      
+      // Load deck lists in parallel for better performance
+      const deckPromises = decks.map(async (deck) => {
+        const entries = await db.deckCards.where('deckId').equals(deck.id!).toArray();
+        return { id: deck.id!, entries };
+      });
+      
+      const deckResults = await Promise.all(deckPromises);
+      deckResults.forEach(({ id, entries }) => {
+        deckLists[id] = Object.fromEntries(entries.map(e => [e.cardId, e.count]));
+      });
+      
+      set({ cards, index, indexReady: true, decks, deckLists, loading: false });
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      set({ loading: false });
     }
-    set({ cards, index, indexReady: true, decks, deckLists });
   },
   search: (q: string) => {
     const { index } = get();
     if (!index) return [];
     if (!q) return get().cards;
-    return index.search(q, { expand: true }).map(r => index.documentStore.getDoc(r.ref));
+    return index.search(q, { expand: true }).map((r: any) => index.documentStore.getDoc(r.ref));
   },
   addCard: (deckId: number, cardId: number) => {
     const lists = { ...get().deckLists };

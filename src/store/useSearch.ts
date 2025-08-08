@@ -3,42 +3,87 @@ import { useStore } from './useStore';
 import { useEffect } from 'react';
 import elasticlunr from 'elasticlunr';
 import { shallow } from 'zustand/shallow';
-import type { Card } from '../types';
-
-interface Filters {
-  inks: string[];
-  cost: [number, number];
-  types?: string[];
-  inkable: 'any' | 'inkable' | 'uninkable';
-}
+import { Card, CardFilters } from '../shared/types';
+import { CARD_CONSTANTS } from '../shared/constants';
 
 interface SearchState {
   query: string;
   setQuery: (q: string) => void;
-  filters: Filters;
-  setFilters: (f: Partial<Filters> | ((prev: Filters) => Partial<Filters>)) => void;
+  filters: CardFilters;
+  setFilters: (f: Partial<CardFilters> | ((prev: CardFilters) => Partial<CardFilters>)) => void;
   clearFilters: () => void;
-  index: elasticlunr.Index<Card> | null;
+  index: any;
   buildIndex: (cards: Card[]) => void;
-  results: () => Card[];
+  results: Card[];
+  updateResults: () => void;
 }
 
-const DEFAULT_FILTERS: Filters = { inks: [], cost: [1, 9], types: [], inkable: 'any' };
+const DEFAULT_FILTERS: CardFilters = { 
+  inks: [], 
+  cost: CARD_CONSTANTS.DEFAULT_COST_RANGE, 
+  types: [], 
+  inkable: 'any' 
+};
+
+// Memoized filtering function for better performance
+function filterCards(cards: Card[], filters: CardFilters): Card[] {
+  if (!cards.length) return [];
+  
+  const { inks, cost, types, inkable } = filters;
+  const [lo, hi] = cost;
+  const isInkable = (c: Card) => c.inkable ?? !/uninkable/i.test(c.text || '');
+  
+  // Early return if no filters are applied
+  if (!inks.length && (lo === 1 && hi === 9) && !types?.length && inkable === 'any') {
+    return cards;
+  }
+
+  return cards.filter(card => {
+    // Ink filter
+    if (inks.length && !inks.includes(card.ink as any)) return false;
+    
+    // Cost filter
+    const cardCost = Number(card.ink_cost ?? 0);
+    if (lo !== 1 || hi !== 9) {
+      if (hi === 9) {
+        if (cardCost < lo) return false;
+      } else {
+        if (cardCost < lo || cardCost > hi) return false;
+      }
+    }
+    
+    // Type filter
+    if (types?.length && !types.includes((card.type || '').split('/')[0])) return false;
+    
+    // Inkable filter
+    if (inkable === 'inkable' && !isInkable(card)) return false;
+    if (inkable === 'uninkable' && isInkable(card)) return false;
+    
+    return true;
+  });
+}
 
 export const useSearch = create<SearchState>((set, get) => ({
   query: '',
   setQuery: (q: string) => {
-    if (get().query !== q) set({ query: q });
+    if (get().query !== q) {
+      set({ query: q });
+      get().updateResults();
+    }
   },
   filters: DEFAULT_FILTERS,
-  setFilters: (f: Partial<Filters> | ((prev: Filters) => Partial<Filters>)) => {
+  setFilters: (f: Partial<CardFilters> | ((prev: CardFilters) => Partial<CardFilters>)) => {
     const currentFilters = get().filters;
     const update = typeof f === 'function' ? f(currentFilters) : f;
     const next = { ...currentFilters, ...update };
     if (shallow(currentFilters, next)) return;
     set({ filters: next });
+    get().updateResults();
   },
-  clearFilters: () => set({ query: '', filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' } }),
+  clearFilters: () => {
+    set({ query: '', filters: DEFAULT_FILTERS });
+    get().updateResults();
+  },
   index: null,
   buildIndex: (cards: Card[]) => {
     const idx = elasticlunr<Card>();
@@ -53,41 +98,34 @@ export const useSearch = create<SearchState>((set, get) => ({
     idx.addField('rarity');
     cards.forEach(c => idx.addDoc(c));
     set({ index: idx });
+    get().updateResults();
   },
-  results: () => {
+  results: [],
+  updateResults: () => {
     const { query, filters, index } = get();
     const cards = useStore.getState().cards;
-    let hits: Array<{ ref: any }>;
+    
+    if (!cards.length) {
+      set({ results: [] });
+      return;
+    }
+
+    let searchResults: Card[];
+    
     if (query && index) {
-      hits = index.search(query, {
+      const hits = index.search(query, {
         fields: { name: { boost: 3 }, subtitle: { boost: 2 }, text: { boost: 1 } },
         expand: true,
         bool: 'AND',
       });
+      const map = new Map(cards.map(c => [c.id, c]));
+      searchResults = hits.map((h: any) => map.get(Number(h.ref))!).filter(Boolean);
     } else {
-      hits = cards.map(c => ({ ref: c.id, score: 1 }));
+      searchResults = cards;
     }
-    const map = new Map(cards.map(c => [c.id, c]));
-    const results = hits.map(h => map.get(Number(h.ref))!).filter(Boolean);
-    const filtered: Card[] = [];
-    const isInkable = (c: Card) => c.inkable ?? !/uninkable/i.test(c.text || '');
-    for (const card of results) {
-      if (filters.inks.length && !filters.inks.includes(card.ink)) continue;
-      const [lo, hi] = filters.cost;
-      const cost = Number(card.ink_cost ?? 0);
-      if (lo !== 1 || hi !== 9) {
-        if (hi === 9) {
-          if (cost < lo) continue;
-        } else {
-          if (cost < lo || cost > hi) continue;
-        }
-      }
-      if (filters.types?.length && !filters.types.includes((card.type || '').split('/')[0])) continue;
-      if (filters.inkable === 'inkable' && !isInkable(card)) continue;
-      if (filters.inkable === 'uninkable' && isInkable(card)) continue;
-      filtered.push(card);
-    }
-    return filtered;
+
+    const filtered = filterCards(searchResults, filters);
+    set({ results: filtered });
   },
 }));
 
@@ -100,5 +138,5 @@ export const useSearchInit = () => {
       console.log(`Building search index for ${cards.length} cards`);
       buildIndex(cards); 
     }
-  }, [cards.length]); // Remove buildIndex from dependencies since it's stable
+  }, [cards.length]);
 };

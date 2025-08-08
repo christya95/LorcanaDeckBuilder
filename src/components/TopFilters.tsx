@@ -1,33 +1,55 @@
-import { Stack, TextField, Chip, IconButton } from "@mui/material";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import React, { useCallback, useMemo } from "react";
+import {
+  Box,
+  TextField,
+  IconButton,
+  Chip,
+  Typography,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useSearch } from "@/store/useSearch";
-import FilterDrawer from "./FilterDrawer";
-import { useState, useMemo, useCallback } from "react";
-import type { Filters } from "@/types";
+import { getInkIcon, type InkType } from "@/icons/inkIcons";
+
+const INK_TYPES: InkType[] = [
+  "Amber",
+  "Amethyst",
+  "Emerald",
+  "Ruby",
+  "Sapphire",
+  "Steel",
+];
 
 export default function TopFilters() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const query = useSearch((s) => s.query);
   const setQuery = useSearch((s) => s.setQuery);
   const filters = useSearch((s) => s.filters);
   const setFilters = useSearch((s) => s.setFilters);
-  const clearFilters = useSearch((s) => s.clearFilters);
 
-  const [open, setOpen] = useState(false);
-  const cost = filters.cost ?? [1, 9];
+  const activeFilterCount = useSearch((s) => {
+    const { inks, types, inkable, cost } = s.filters;
+    return (
+      (inks?.length || 0) +
+      (types?.length || 0) +
+      (inkable !== "any" ? 1 : 0) +
+      (cost[0] !== 1 || cost[1] !== 9 ? 1 : 0)
+    );
+  });
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setQuery(e.target.value);
-    },
-    [setQuery]
-  );
+  const clearQuery = useCallback(() => {
+    setQuery("");
+  }, [setQuery]);
 
-  // Use functional approach to avoid dependencies on changing filter values
   const removeInk = useCallback(
-    (ink: string) => {
-      setFilters((currentFilters: Filters) => ({
-        inks: (currentFilters.inks || []).filter((x: string) => x !== ink),
+    (ink: InkType) => {
+      setFilters((prev) => ({
+        ...prev,
+        inks: prev.inks?.filter((i) => i !== ink) || [],
       }));
     },
     [setFilters]
@@ -35,98 +57,316 @@ export default function TopFilters() {
 
   const removeType = useCallback(
     (type: string) => {
-      setFilters((currentFilters: Filters) => ({
-        types: (currentFilters.types || []).filter((x: string) => x !== type),
+      setFilters((prev) => ({
+        ...prev,
+        types: prev.types?.filter((t) => t !== type) || [],
       }));
     },
     [setFilters]
   );
 
   const removeInkable = useCallback(() => {
-    setFilters({ inkable: "any" });
+    setFilters((prev) => ({
+      ...prev,
+      inkable: "any",
+    }));
   }, [setFilters]);
 
   const removeCost = useCallback(() => {
-    setFilters({ cost: [1, 9] });
+    setFilters((prev) => ({
+      ...prev,
+      cost: [1, 9],
+    }));
   }, [setFilters]);
 
+  const toggleInk = useCallback(
+    (ink: InkType) => {
+      setFilters((prev) => ({
+        ...prev,
+        inks: prev.inks?.includes(ink)
+          ? prev.inks.filter((i) => i !== ink)
+          : [...(prev.inks || []), ink],
+      }));
+    },
+    [setFilters]
+  );
+
+  const toggleCost = useCallback(
+    (costValue: number) => {
+      setFilters((prev) => {
+        const currentCost = prev.cost;
+        if (costValue === 9) {
+          // Toggle 9+ range
+          if (currentCost[0] === 1 && currentCost[1] === 9) {
+            return { ...prev, cost: [9, 9] };
+          } else {
+            return { ...prev, cost: [1, 9] };
+          }
+        } else {
+          // Toggle specific cost
+          if (currentCost[0] === costValue && currentCost[1] === costValue) {
+            return { ...prev, cost: [1, 9] };
+          } else {
+            return { ...prev, cost: [costValue, costValue] };
+          }
+        }
+      });
+    },
+    [setFilters]
+  );
+
+  // Memoized chips to prevent unnecessary re-renders
   const chips = useMemo(() => {
-    const chipList: Array<{ label: string; onDelete: () => void }> = [];
+    const result: Array<{
+      key: string;
+      label: string;
+      onDelete: () => void;
+      color: "primary" | "secondary" | "success" | "warning" | "error";
+    }> = [];
 
-    (filters.inks || []).forEach((i: string) => {
-      chipList.push({
-        label: i,
-        onDelete: () => removeInk(i),
+    // Ink filters
+    if (filters.inks?.length) {
+      filters.inks.forEach((ink) => {
+        result.push({
+          key: `ink-${ink}`,
+          label: ink,
+          onDelete: () => removeInk(ink as InkType),
+          color: "primary" as const,
+        });
       });
-    });
+    }
 
-    (filters.types || []).forEach((t: string) => {
-      chipList.push({
-        label: t,
-        onDelete: () => removeType(t),
+    // Type filters
+    if (filters.types?.length) {
+      filters.types.forEach((type) => {
+        result.push({
+          key: `type-${type}`,
+          label: type,
+          onDelete: () => removeType(type),
+          color: "secondary" as const,
+        });
       });
-    });
+    }
 
-    if (filters.inkable && filters.inkable !== "any") {
-      chipList.push({
+    // Inkable filter
+    if (filters.inkable !== "any") {
+      result.push({
+        key: "inkable",
         label: filters.inkable === "inkable" ? "Inkable" : "Uninkable",
         onDelete: removeInkable,
+        color: "success" as const,
       });
     }
 
-    if (cost[0] !== 1 || cost[1] !== 9) {
-      chipList.push({
-        label: `${cost[0]}-${cost[1] === 9 ? "9+" : cost[1]}`,
+    // Cost filter
+    if (filters.cost[0] !== 1 || filters.cost[1] !== 9) {
+      result.push({
+        key: "cost",
+        label: `Cost ${filters.cost[0]}-${
+          filters.cost[1] === 9 ? "9+" : filters.cost[1]
+        }`,
         onDelete: removeCost,
+        color: "warning" as const,
       });
     }
 
-    return chipList;
-  }, [
-    filters.inks,
-    filters.types,
-    filters.inkable,
-    cost,
-    removeInk,
-    removeType,
-    removeInkable,
-    removeCost,
-  ]);
+    return result;
+  }, [filters, removeInk, removeType, removeInkable, removeCost]);
 
   return (
-    <>
-      {open && <FilterDrawer open={open} onClose={() => setOpen(false)} />}
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        flexWrap="wrap"
-        sx={{ mb: 2 }}
-      >
-        <IconButton onClick={() => setOpen(true)} size="small">
-          <FilterAltIcon />
-        </IconButton>
+    <Box
+      sx={{
+        p: isMobile ? 1.5 : 2,
+        backgroundColor: "background.paper",
+        borderBottom: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      {/* Search Bar */}
+      <Box sx={{ mb: 2 }}>
         <TextField
-          size="small"
-          placeholder="Search cards…"
+          fullWidth
+          placeholder="Search cards..."
           value={query}
-          onChange={handleChange}
-          sx={{ flex: { xs: "1 0 100%", md: "0 0 260px" } }}
+          onChange={(e) => setQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />
+            ),
+            endAdornment: query && (
+              <IconButton size="small" onClick={clearQuery}>
+                <ClearIcon />
+              </IconButton>
+            ),
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: "rgba(255,255,255,0.05)",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.08)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            },
+          }}
         />
-        {chips.map((c) => (
-          <Chip
-            key={c.label}
-            label={c.label}
-            onDelete={c.onDelete}
-            size="small"
-          />
-        ))}
+      </Box>
+
+      {/* Compact Filter Sections */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {/* Ink Color Filters */}
+        <Box>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              display: "block",
+              fontWeight: "medium",
+            }}
+          >
+            Colors
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: isMobile ? 0.5 : 1,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            {INK_TYPES.map((ink) => {
+              const InkIcon = getInkIcon(ink);
+              const isSelected = (filters.inks || []).includes(ink);
+
+              return (
+                <Box
+                  key={ink}
+                  onClick={() => toggleInk(ink)}
+                  sx={{
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    transform: isSelected ? "scale(1.1)" : "scale(1)",
+                    opacity: isSelected ? 1 : 0.7,
+                    "&:hover": {
+                      transform: "scale(1.15)",
+                      opacity: 1,
+                    },
+                    filter: isSelected
+                      ? "drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+                      : "none",
+                  }}
+                >
+                  <InkIcon
+                    size={isMobile ? 28 : 32}
+                    className={isSelected ? "selected" : ""}
+                  />
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+
+        {/* Cost Filters */}
+        <Box>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              display: "block",
+              fontWeight: "medium",
+            }}
+          >
+            Cost
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: isMobile ? 0.25 : 0.5,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((cost) => {
+              const isSelected =
+                filters.cost[0] === cost && filters.cost[1] === cost;
+              const isInRange =
+                filters.cost[0] <= cost && filters.cost[1] >= cost;
+              const label = cost >= 9 ? "9+" : String(cost);
+
+              return (
+                <Box
+                  key={cost}
+                  onClick={() => toggleCost(cost)}
+                  sx={{
+                    width: isMobile ? 28 : 32,
+                    height: isMobile ? 28 : 32,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: isMobile ? "0.7rem" : "0.8rem",
+                    fontWeight: "bold",
+                    backgroundColor: isSelected
+                      ? "primary.main"
+                      : isInRange
+                      ? "primary.light"
+                      : "transparent",
+                    border: "1px solid",
+                    borderColor: isSelected
+                      ? "primary.main"
+                      : "rgba(255,255,255,0.2)",
+                    color: isSelected || isInRange ? "white" : "text.primary",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: isSelected
+                        ? "primary.dark"
+                        : "rgba(255,255,255,0.1)",
+                      transform: "scale(1.1)",
+                    },
+                  }}
+                >
+                  {label}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+
+        {/* Active Filter Chips */}
         {chips.length > 0 && (
-          <IconButton size="small" onClick={clearFilters}>
-            <ClearIcon fontSize="small" />
-          </IconButton>
+          <Box sx={{ mt: 1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 0.5,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              {chips.map((chip) => (
+                <Chip
+                  key={chip.key}
+                  label={chip.label}
+                  onDelete={chip.onDelete}
+                  color={chip.color}
+                  size="small"
+                  sx={{
+                    fontSize: "0.7rem",
+                    height: 24,
+                    "& .MuiChip-deleteIcon": {
+                      fontSize: "0.8rem",
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
         )}
-      </Stack>
-    </>
+      </Box>
+    </Box>
   );
 }

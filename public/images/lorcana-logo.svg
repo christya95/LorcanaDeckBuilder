@@ -1,0 +1,21 @@
+<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A2C70" stop-opacity="1"/>
+      <stop offset="50%" stop-color="#FFD700" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#4A2C70" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="200" height="80" fill="rgba(0,0,0,0.8)" rx="10"/>
+  
+  <!-- Disney Text -->
+  <text x="100" y="20" text-anchor="middle" fill="#4A2C70" font-family="cursive" font-size="12" font-weight="bold">Disney</text>
+  
+  <!-- LORCANA Text -->
+  <text x="100" y="45" text-anchor="middle" fill="#FFD700" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-shadow="2px 2px 4px rgba(0,0,0,0.8)">LORCANA</text>
+  
+  <!-- Trading Card Game Text -->
+  <text x="100" y="65" text-anchor="middle" fill="#4A2C70" font-family="Arial, sans-serif" font-size="8" font-weight="medium">TRADING CARD GAME</text>
+</svg>
