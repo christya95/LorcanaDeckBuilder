@@ -26,14 +26,33 @@ interface SearchState {
 
 const DEFAULT_FILTERS: Filters = { inks: [], types: [], rarities: [], sets: [], cost: [1,9], inkable: 'any' };
 
+function eq(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
 let index: Index<Card> | null = null;
 
 export const useSearch = create<SearchState>((set, get) => ({
   query: '',
-  setQuery: (q: string) => set({ query: q }),
-  filters: DEFAULT_FILTERS,
-  setFilters: (f: Partial<Filters>) => set({ filters: { ...get().filters, ...f } }),
-  clearFilters: () => set({ query: '', filters: DEFAULT_FILTERS }),
+  setQuery: (q: string) => set(state => (state.query === q ? state : { query: q })),
+  filters: { ...DEFAULT_FILTERS },
+  setFilters: (f: Partial<Filters>) => set(state => {
+    const next = { ...state.filters, ...f };
+    const cur = state.filters;
+    if (
+      cur.inkable === next.inkable &&
+      cur.cost[0] === next.cost[0] &&
+      cur.cost[1] === next.cost[1] &&
+      eq(cur.inks, next.inks) &&
+      eq(cur.types, next.types) &&
+      eq(cur.rarities, next.rarities) &&
+      eq(cur.sets, next.sets)
+    ) return state;
+    return { filters: next };
+  }),
+  clearFilters: () => set({ query: '', filters: { ...DEFAULT_FILTERS } }),
   buildIndex: (cards: Card[]) => {
     index = elasticlunr<Card>(function (this: Index<Card>) {
       this.addField('name');
