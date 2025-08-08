@@ -32,7 +32,7 @@ export const useStore = create<State>((set, get) => ({
   deckLists: {},
   selectedDeckId: null,
   query: '',
-  filters: { inks: [], rarities: [], types: [], sets: [], cost: [0, 10] },
+  filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' },
   setFilters: (f: Filters) => set({ filters: f }),
   load: async () => {
     const { cards, index } = await loadCards();

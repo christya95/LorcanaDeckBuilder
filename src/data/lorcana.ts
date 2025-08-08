@@ -3,7 +3,8 @@ import { buildIndex } from '../lib/elastic';
 import type { Card } from '../types';
 import elasticlunr from 'elasticlunr';
 
-const SETS = ["TFC","ROTF","ITI","UR","SDS","INKBOUND"];
+// Updated set codes to match what's actually available in the repository
+const SETS = ["TFC", "ROTF", "ITI", "UR", "SDS", "INK"];
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/LorcanaJSON/LorcanaJSON@latest/cards';
 const GITHUB_BASE = 'https://raw.githubusercontent.com/LorcanaJSON/LorcanaJSON/main/EN/cards';
 
@@ -12,11 +13,17 @@ async function fetchSet(set: string) {
   for (const url of urls) {
     try {
       const res = await fetch(url);
-      if (res.ok) return await res.json();
-    } catch {
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`Successfully loaded set: ${set}`);
+        return data;
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch ${set} from ${url}:`, error);
       // ignore and try next source
     }
   }
+  console.warn(`Failed to load set: ${set} from all sources`);
   return null;
 }
 
@@ -31,6 +38,7 @@ function normalize(cards: Card[]): Card[] {
 export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.Index<Card> }> {
   const cached = await db.cards.toArray();
   if (cached && cached.length) {
+    console.log(`Using ${cached.length} cached cards`);
     const index = buildIndex(cached);
     return { cards: cached, index };
   }
@@ -38,16 +46,29 @@ export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.I
   let all: Card[] = [];
   for (const set of SETS) {
     const data = await fetchSet(set);
-    if (data) all = all.concat(data.cards || data);
+    if (data) {
+      const setCards = data.cards || data;
+      all = all.concat(setCards);
+      console.log(`Added ${setCards.length} cards from ${set}`);
+    }
   }
 
   if (!all.length) {
-    const local = await fetch('/data/cards.json').then(r => r.json());
-    all = local.cards || local;
+    console.log('No cards loaded from external sources, trying local data');
+    try {
+      const local = await fetch('/data/cards.json').then(r => r.json());
+      all = local.cards || local;
+      console.log(`Loaded ${all.length} cards from local data`);
+    } catch (error) {
+      console.error('Failed to load local cards:', error);
+    }
   }
 
   const cards = normalize(all);
-  if (cards.length) await db.cards.bulkPut(cards);
+  if (cards.length) {
+    await db.cards.bulkPut(cards);
+    console.log(`Cached ${cards.length} cards`);
+  }
   const index = buildIndex(cards);
   return { cards, index };
 }
