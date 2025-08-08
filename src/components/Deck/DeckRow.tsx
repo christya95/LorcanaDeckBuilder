@@ -11,7 +11,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { Card } from "@/types";
-import { INK_COLORS, getInkIcon, type InkType } from "@/icons/inkIcons";
+import { INK_COLORS, InkType } from "@/shared/constants/inkTypes";
+import { getInkIcon } from "@/icons/inkIcons";
 
 interface DeckRowProps {
   card: Card;

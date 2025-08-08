@@ -3,11 +3,10 @@ import type { Card, DeckList, Filters, DeckMeta } from '../types';
 import { loadCards } from '../data/lorcana';
 import { exportDeck as doExport, importDeck as doImport } from '../lib/export';
 import { db } from '../lib/dexie';
-import type elasticlunr from 'elasticlunr';
 
 interface State {
   cards: Card[];
-  index: elasticlunr.Index<Card> | null;
+  index: any; // Changed from elasticlunr.Index<Card> | null due to TS namespace issue
   indexReady: boolean;
   loading: boolean;
   decks: DeckMeta[];
@@ -64,7 +63,7 @@ export const useStore = create<State>((set, get) => ({
     const { index } = get();
     if (!index) return [];
     if (!q) return get().cards;
-    return index.search(q, { expand: true }).map(r => index.documentStore.getDoc(r.ref));
+    return index.search(q, { expand: true }).map((r: any) => index.documentStore.getDoc(r.ref));
   },
   addCard: (deckId: number, cardId: number) => {
     const lists = { ...get().deckLists };

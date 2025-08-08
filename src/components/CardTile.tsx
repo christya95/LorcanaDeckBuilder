@@ -14,7 +14,8 @@ import {
   Backdrop,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { memo, useState, useCallback } from "react";
+import SearchIcon from "@mui/icons-material/Search";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 
 interface Props {
   card: CardType;
@@ -27,11 +28,42 @@ const CardTile = memo(function CardTile({
   card,
   onCardClick,
   cardWidth = 240,
-  cardHeight = 320,
+  cardHeight = 336, // Adjusted to match card aspect ratio (1.4:1)
 }: Props) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showExpanded, setShowExpanded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: "50px", // Start loading 50px before the card is visible
+        threshold: 0.1,
+      }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
 
   const handleImageLoad = useCallback(() => {
     setImageLoading(false);
@@ -45,9 +77,19 @@ const CardTile = memo(function CardTile({
   const imageUrl = card.image_url || (card as any).image || "/art/card-ph.svg";
   const fallbackUrl = "/art/card-ph.svg";
 
+  const handleMagnifyClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setShowExpanded(true);
+  }, []);
+
+  const handleCardClick = useCallback(() => {
+    onCardClick?.(card);
+  }, [onCardClick, card]);
+
   return (
     <>
       <MUICard
+        ref={containerRef}
         sx={{
           borderRadius: 3,
           overflow: "hidden",
@@ -60,8 +102,10 @@ const CardTile = memo(function CardTile({
           cursor: onCardClick ? "pointer" : "default",
           width: cardWidth,
           height: cardHeight,
+          position: "relative",
+          backgroundColor: "rgba(0,0,0,0.8)", // Dark background for card borders
         }}
-        onClick={() => onCardClick?.(card)}
+        onClick={handleCardClick}
       >
         {/* Full height image - no card name section */}
         <Box
@@ -69,6 +113,10 @@ const CardTile = memo(function CardTile({
             position: "relative",
             width: "100%",
             height: "100%", // Full height
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "8px", // Add padding to show card borders
           }}
         >
           {imageLoading && (
@@ -86,24 +134,52 @@ const CardTile = memo(function CardTile({
               }}
             />
           )}
-          <img
-            src={imageError ? fallbackUrl : imageUrl}
-            alt={card.name}
-            loading="lazy"
-            decoding="async"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              opacity: imageLoading ? 0 : 1,
-              transition: "opacity 0.3s ease",
+
+          {/* Only load image when visible */}
+          {isVisible && (
+            <img
+              ref={imageRef}
+              src={imageError ? fallbackUrl : imageUrl}
+              alt={card.name}
+              loading="lazy"
+              decoding="async"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain", // Changed from "cover" to "contain" to show full card
+                display: "block",
+                opacity: imageLoading ? 0 : 1,
+                transition: "opacity 0.3s ease",
+                borderRadius: "8px", // Rounded corners for the card image
+              }}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          )}
+
+          {/* Magnifying glass icon on top right */}
+          <IconButton
+            onClick={handleMagnifyClick}
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              backgroundColor: "rgba(0,0,0,0.7)",
+              color: "white",
+              backdropFilter: "blur(4px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              width: 32,
+              height: 32,
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.8)",
+                transform: "scale(1.1)",
+              },
+              transition: "all 0.2s ease",
+              zIndex: 2,
             }}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            onMouseEnter={() => setShowExpanded(true)}
-            onMouseLeave={() => setShowExpanded(false)}
-          />
+          >
+            <SearchIcon sx={{ fontSize: 16 }} />
+          </IconButton>
         </Box>
       </MUICard>
 
@@ -115,8 +191,6 @@ const CardTile = memo(function CardTile({
           backgroundColor: "rgba(0,0,0,0.9)",
           backdropFilter: "blur(4px)",
         }}
-        onMouseEnter={() => setShowExpanded(true)}
-        onMouseLeave={() => setShowExpanded(false)}
       >
         <Fade in={showExpanded} timeout={200}>
           <Box
@@ -163,6 +237,8 @@ const CardTile = memo(function CardTile({
                 "&:hover": {
                   transform: "scale(1.15)",
                 },
+                backgroundColor: "rgba(0,0,0,0.8)", // Dark background for card borders
+                padding: "12px", // Add padding to show card borders
               }}
             >
               <img
@@ -175,6 +251,7 @@ const CardTile = memo(function CardTile({
                   maxHeight: "800px",
                   display: "block",
                   borderRadius: "8px",
+                  objectFit: "contain", // Ensure full card is visible
                 }}
               />
             </Box>

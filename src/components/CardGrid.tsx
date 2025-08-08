@@ -1,7 +1,8 @@
 import type { Card } from "../types";
 import CardTile from "./CardTile";
 import { Box, useTheme, useMediaQuery } from "@mui/material";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
+import { CARD_DISPLAY_CONFIG } from "../shared/constants/cardConstants";
 
 interface Props {
   cards: Card[];
@@ -14,53 +15,47 @@ export default function CardGrid({ cards, onCardClick }: Props) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const isLargeScreen = useMediaQuery(theme.breakpoints.up("xl"));
 
-  // Bigger cards with minimal spacing
+  // Responsive card configuration with proper aspect ratio
   const cardConfig = useMemo(() => {
     if (isMobile) {
-      return {
-        width: 160,
-        height: 224,
-        gap: 4,
-        minColumns: 2,
-      };
+      return CARD_DISPLAY_CONFIG.GRID.MOBILE;
     } else if (isTablet) {
-      return {
-        width: 180,
-        height: 252,
-        gap: 6,
-        minColumns: 3,
-      };
+      return CARD_DISPLAY_CONFIG.GRID.TABLET;
     } else if (isLargeScreen) {
-      return {
-        width: 200,
-        height: 280,
-        gap: 8,
-        minColumns: 5,
-      };
+      return CARD_DISPLAY_CONFIG.GRID.LARGE_SCREEN;
     } else {
-      return {
-        width: 190,
-        height: 266,
-        gap: 7,
-        minColumns: 4,
-      };
+      return CARD_DISPLAY_CONFIG.GRID.DESKTOP;
     }
   }, [isMobile, isTablet, isLargeScreen]);
+
+  // Memoized card click handler
+  const handleCardClick = useCallback(
+    (card: Card) => {
+      onCardClick?.(card);
+    },
+    [onCardClick]
+  );
 
   return (
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: `repeat(auto-fill, minmax(${cardConfig.width}px, 1fr))`,
-        gap: cardConfig.gap,
+        gridTemplateColumns: `repeat(auto-fill, minmax(${cardConfig.CARD_WIDTH}px, 1fr))`,
+        gap: cardConfig.GAP,
         padding: 0.5,
         width: "100%",
         justifyContent: "center",
         minHeight: "100vh",
+        // Performance optimizations
+        willChange: "transform",
+        transform: "translateZ(0)", // Force hardware acceleration
         "& > *": {
           justifySelf: "center",
           width: "100%",
-          maxWidth: cardConfig.width,
+          maxWidth: cardConfig.CARD_WIDTH,
+          // Optimize individual card rendering
+          willChange: "transform",
+          transform: "translateZ(0)",
         },
       }}
     >
@@ -68,9 +63,9 @@ export default function CardGrid({ cards, onCardClick }: Props) {
         <CardTile
           key={card.id}
           card={card}
-          onCardClick={onCardClick}
-          cardWidth={cardConfig.width}
-          cardHeight={cardConfig.height}
+          onCardClick={handleCardClick}
+          cardWidth={cardConfig.CARD_WIDTH}
+          cardHeight={cardConfig.CARD_HEIGHT}
         />
       ))}
     </Box>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { Card } from "@/types";
-import { INK_COLORS, type InkType } from "@/icons/inkIcons";
+import { INK_COLORS, InkType } from "@/shared/constants/inkTypes";
 
 interface PieChartData {
   label: string;
@@ -27,41 +27,42 @@ export default function DeckPieChart({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const chartSize = isMobile ? size * 0.8 : size;
+  const chartSize = isMobile ? size * 1.2 : size * 1.5; // Increased size for better visibility
   const radius = chartSize / 2;
-  const strokeWidth = 8;
+  const strokeWidth = 12; // Increased stroke width
 
   // Calculate SVG path for pie segments
   const createPieSegment = (
     startAngle: number,
     endAngle: number,
-    radius: number
+    radiusValue: number
   ) => {
-    const x1 = radius * Math.cos(startAngle);
-    const y1 = radius * Math.sin(startAngle);
-    const x2 = radius * Math.cos(endAngle);
-    const y2 = radius * Math.sin(endAngle);
+    const x1 = radiusValue * Math.cos(startAngle);
+    const y1 = radiusValue * Math.sin(startAngle);
+    const x2 = radiusValue * Math.cos(endAngle);
+    const y2 = radiusValue * Math.sin(endAngle);
 
     const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
 
     return [
       `M ${radius} ${radius}`,
       `L ${radius + x1} ${radius + y1}`,
-      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${radius + x2} ${radius + y2}`,
+      `A ${radiusValue} ${radiusValue} 0 ${largeArcFlag} 1 ${radius + x2} ${
+        radius + y2
+      }`,
       "Z",
     ].join(" ");
   };
 
-  // Calculate angles for each segment
   const total = data.reduce((sum, item) => sum + item.value, 0);
+  const nonZero = data.filter((d) => d.value > 0);
   let currentAngle = -Math.PI / 2; // Start from top
 
-  const segments = data.map((item, index) => {
+  const segments = nonZero.map((item) => {
     const percentage = total > 0 ? item.value / total : 0;
     const angle = percentage * 2 * Math.PI;
     const startAngle = currentAngle;
     const endAngle = currentAngle + angle;
-
     currentAngle = endAngle;
 
     return {
@@ -69,17 +70,23 @@ export default function DeckPieChart({
       startAngle,
       endAngle,
       path: createPieSegment(startAngle, endAngle, radius - strokeWidth / 2),
+      angle,
     };
   });
 
+  const isSingleFullCircle =
+    segments.length === 1 && segments[0].angle >= 2 * Math.PI - 0.0001;
+
   return (
-    <Box sx={{ textAlign: "center" }}>
+    <Box sx={{ textAlign: "center", minWidth: chartSize }}>
       <Typography
         variant="subtitle2"
         sx={{
           mb: 1,
-          fontWeight: "medium",
-          fontSize: isMobile ? "0.75rem" : "0.875rem",
+          fontWeight: "bold",
+          fontSize: isMobile ? "0.8rem" : "1rem",
+          color: "white",
+          textShadow: "0 1px 2px rgba(0,0,0,0.5)",
         }}
       >
         {title}
@@ -90,6 +97,7 @@ export default function DeckPieChart({
           width={chartSize}
           height={chartSize}
           viewBox={`0 0 ${chartSize} ${chartSize}`}
+          style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))" }}
         >
           {/* Background circle */}
           <circle
@@ -97,20 +105,34 @@ export default function DeckPieChart({
             cy={radius}
             r={radius - strokeWidth / 2}
             fill="none"
-            stroke={theme.palette.divider}
+            stroke="rgba(255,255,255,0.1)"
             strokeWidth={strokeWidth}
           />
 
-          {/* Pie segments */}
-          {segments.map((segment, index) => (
-            <path
-              key={index}
-              d={segment.path}
-              fill={segment.color}
-              stroke={theme.palette.background.paper}
-              strokeWidth={1}
+          {/* Single 100% segment (draw a filled circle) */}
+          {isSingleFullCircle && (
+            <circle
+              cx={radius}
+              cy={radius}
+              r={radius - strokeWidth / 2}
+              fill={segments[0].color}
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth={2}
             />
-          ))}
+          )}
+
+          {/* Pie segments */}
+          {!isSingleFullCircle &&
+            segments.map((segment, index) => (
+              <path
+                key={index}
+                d={segment.path}
+                fill={segment.color}
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth={2}
+                style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" }}
+              />
+            ))}
         </svg>
 
         {/* Center text */}
@@ -127,8 +149,10 @@ export default function DeckPieChart({
             variant="h6"
             sx={{
               fontWeight: "bold",
-              fontSize: isMobile ? "1rem" : "1.25rem",
+              fontSize: isMobile ? "1.2rem" : "1.5rem",
               lineHeight: 1,
+              color: "white",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
             }}
           >
             {total}
@@ -136,8 +160,10 @@ export default function DeckPieChart({
           <Typography
             variant="caption"
             sx={{
-              opacity: 0.7,
-              fontSize: isMobile ? "0.6rem" : "0.75rem",
+              opacity: 0.9,
+              fontSize: isMobile ? "0.7rem" : "0.8rem",
+              color: "white",
+              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
             }}
           >
             cards
@@ -155,23 +181,27 @@ export default function DeckPieChart({
               alignItems: "center",
               justifyContent: "center",
               gap: 0.5,
-              mb: 0.5,
+              mb: 0.25,
             }}
           >
             <Box
               sx={{
-                width: 8,
-                height: 8,
+                width: 10,
+                height: 10,
                 borderRadius: "50%",
                 backgroundColor: segment.color,
                 flexShrink: 0,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
               }}
             />
             <Typography
               variant="caption"
               sx={{
-                fontSize: isMobile ? "0.6rem" : "0.75rem",
-                opacity: 0.8,
+                fontSize: isMobile ? "0.7rem" : "0.8rem",
+                opacity: 0.9,
+                color: "white",
+                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                fontWeight: "medium",
               }}
             >
               {segment.label} ({segment.percentage.toFixed(0)}%)

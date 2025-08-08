@@ -3,31 +3,30 @@ import { useStore } from './useStore';
 import { useEffect } from 'react';
 import elasticlunr from 'elasticlunr';
 import { shallow } from 'zustand/shallow';
-import type { Card } from '../types';
-
-interface Filters {
-  inks: string[];
-  cost: [number, number];
-  types?: string[];
-  inkable: 'any' | 'inkable' | 'uninkable';
-}
+import { Card, CardFilters } from '../shared/types';
+import { CARD_CONSTANTS } from '../shared/constants';
 
 interface SearchState {
   query: string;
   setQuery: (q: string) => void;
-  filters: Filters;
-  setFilters: (f: Partial<Filters> | ((prev: Filters) => Partial<Filters>)) => void;
+  filters: CardFilters;
+  setFilters: (f: Partial<CardFilters> | ((prev: CardFilters) => Partial<CardFilters>)) => void;
   clearFilters: () => void;
-  index: elasticlunr.Index<Card> | null;
+  index: any;
   buildIndex: (cards: Card[]) => void;
   results: Card[];
   updateResults: () => void;
 }
 
-const DEFAULT_FILTERS: Filters = { inks: [], cost: [1, 9], types: [], inkable: 'any' };
+const DEFAULT_FILTERS: CardFilters = { 
+  inks: [], 
+  cost: CARD_CONSTANTS.DEFAULT_COST_RANGE, 
+  types: [], 
+  inkable: 'any' 
+};
 
 // Memoized filtering function for better performance
-function filterCards(cards: Card[], filters: Filters): Card[] {
+function filterCards(cards: Card[], filters: CardFilters): Card[] {
   if (!cards.length) return [];
   
   const { inks, cost, types, inkable } = filters;
@@ -41,7 +40,7 @@ function filterCards(cards: Card[], filters: Filters): Card[] {
 
   return cards.filter(card => {
     // Ink filter
-    if (inks.length && !inks.includes(card.ink)) return false;
+    if (inks.length && !inks.includes(card.ink as any)) return false;
     
     // Cost filter
     const cardCost = Number(card.ink_cost ?? 0);
@@ -73,7 +72,7 @@ export const useSearch = create<SearchState>((set, get) => ({
     }
   },
   filters: DEFAULT_FILTERS,
-  setFilters: (f: Partial<Filters> | ((prev: Filters) => Partial<Filters>)) => {
+  setFilters: (f: Partial<CardFilters> | ((prev: CardFilters) => Partial<CardFilters>)) => {
     const currentFilters = get().filters;
     const update = typeof f === 'function' ? f(currentFilters) : f;
     const next = { ...currentFilters, ...update };
@@ -82,7 +81,7 @@ export const useSearch = create<SearchState>((set, get) => ({
     get().updateResults();
   },
   clearFilters: () => {
-    set({ query: '', filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' } });
+    set({ query: '', filters: DEFAULT_FILTERS });
     get().updateResults();
   },
   index: null,
@@ -120,7 +119,7 @@ export const useSearch = create<SearchState>((set, get) => ({
         bool: 'AND',
       });
       const map = new Map(cards.map(c => [c.id, c]));
-      searchResults = hits.map(h => map.get(Number(h.ref))!).filter(Boolean);
+      searchResults = hits.map((h: any) => map.get(Number(h.ref))!).filter(Boolean);
     } else {
       searchResults = cards;
     }

@@ -3,16 +3,13 @@ import {
   Box,
   TextField,
   IconButton,
-  Badge,
-  Button,
-  Stack,
+  Chip,
   Typography,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import { useSearch } from "@/store/useSearch";
 import { getInkIcon, type InkType } from "@/icons/inkIcons";
 
@@ -29,11 +26,11 @@ export default function TopFilters() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Separate selectors to prevent unnecessary re-renders
   const query = useSearch((s) => s.query);
   const setQuery = useSearch((s) => s.setQuery);
   const filters = useSearch((s) => s.filters);
   const setFilters = useSearch((s) => s.setFilters);
+
   const activeFilterCount = useSearch((s) => {
     const { inks, types, inkable, cost } = s.filters;
     return (
@@ -120,7 +117,12 @@ export default function TopFilters() {
 
   // Memoized chips to prevent unnecessary re-renders
   const chips = useMemo(() => {
-    const result = [];
+    const result: Array<{
+      key: string;
+      label: string;
+      onDelete: () => void;
+      color: "primary" | "secondary" | "success" | "warning" | "error";
+    }> = [];
 
     // Ink filters
     if (filters.inks?.length) {
@@ -174,224 +176,197 @@ export default function TopFilters() {
   return (
     <Box
       sx={{
-        p: { xs: 2, md: 3 },
+        p: isMobile ? 1.5 : 2,
         backgroundColor: "background.paper",
         borderBottom: "1px solid rgba(255,255,255,0.1)",
       }}
     >
-      {/* Search and Filters Row */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          mb: 3,
-          flexWrap: "wrap",
-        }}
-      >
-        {/* Search Bar */}
-        <Box sx={{ flex: 1, minWidth: 200 }}>
-          <TextField
-            fullWidth
-            placeholder="Search cards..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />
-              ),
-              endAdornment: query && (
-                <IconButton size="small" onClick={clearQuery}>
-                  <ClearIcon />
-                </IconButton>
-              ),
-              sx: {
-                backgroundColor: "rgba(255,255,255,0.05)",
-                borderRadius: 2,
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255,255,255,0.1)",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255,255,255,0.2)",
-                },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "primary.main",
-                },
-              },
-            }}
-          />
-        </Box>
-
-        {/* Filters Button */}
-        <Badge badgeContent={activeFilterCount} color="error">
-          <Button
-            variant="outlined"
-            startIcon={<FilterListIcon />}
-            sx={{
-              borderColor: "rgba(255,255,255,0.2)",
-              color: "text.primary",
+      {/* Search Bar */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search cards..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />
+            ),
+            endAdornment: query && (
+              <IconButton size="small" onClick={clearQuery}>
+                <ClearIcon />
+              </IconButton>
+            ),
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: "rgba(255,255,255,0.05)",
               "&:hover": {
-                borderColor: "rgba(255,255,255,0.4)",
-                backgroundColor: "rgba(255,255,255,0.05)",
+                backgroundColor: "rgba(255,255,255,0.08)",
               },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            },
+          }}
+        />
+      </Box>
+
+      {/* Compact Filter Sections */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {/* Ink Color Filters */}
+        <Box>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              display: "block",
+              fontWeight: "medium",
             }}
           >
-            FILTERS
-          </Button>
-        </Badge>
-      </Box>
+            Colors
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: isMobile ? 0.5 : 1,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            {INK_TYPES.map((ink) => {
+              const InkIcon = getInkIcon(ink);
+              const isSelected = (filters.inks || []).includes(ink);
 
-      {/* Ink Color Filters */}
-      <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mb: 2,
-            color: "text.secondary",
-            fontWeight: "medium",
-            fontSize: isMobile ? "0.875rem" : "1rem",
-          }}
-        >
-          Colors
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            gap: isMobile ? 1 : 2,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          {INK_TYPES.map((ink) => {
-            const InkIcon = getInkIcon(ink);
-            const isSelected = (filters.inks || []).includes(ink);
-
-            return (
-              <Box
-                key={ink}
-                onClick={() => toggleInk(ink)}
-                sx={{
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  transform: isSelected ? "scale(1.1)" : "scale(1)",
-                  opacity: isSelected ? 1 : 0.7,
-                  "&:hover": {
-                    transform: "scale(1.15)",
-                    opacity: 1,
-                  },
-                  filter: isSelected
-                    ? "drop-shadow(0 0 8px rgba(255,255,255,0.3))"
-                    : "none",
-                }}
-              >
-                <InkIcon
-                  size={isMobile ? 36 : 44}
-                  className={isSelected ? "selected" : ""}
-                />
-              </Box>
-            );
-          })}
+              return (
+                <Box
+                  key={ink}
+                  onClick={() => toggleInk(ink)}
+                  sx={{
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    transform: isSelected ? "scale(1.1)" : "scale(1)",
+                    opacity: isSelected ? 1 : 0.7,
+                    "&:hover": {
+                      transform: "scale(1.15)",
+                      opacity: 1,
+                    },
+                    filter: isSelected
+                      ? "drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+                      : "none",
+                  }}
+                >
+                  <InkIcon
+                    size={isMobile ? 28 : 32}
+                    className={isSelected ? "selected" : ""}
+                  />
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
-      </Box>
 
-      {/* Cost Filters */}
-      <Box sx={{ mb: 2 }}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mb: 2,
-            color: "text.secondary",
-            fontWeight: "medium",
-            fontSize: isMobile ? "0.875rem" : "1rem",
-          }}
-        >
-          Cost
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            gap: isMobile ? 0.5 : 1,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((cost) => {
-            const isSelected =
-              filters.cost[0] === cost && filters.cost[1] === cost;
-            const isInRange =
-              filters.cost[0] <= cost && filters.cost[1] >= cost;
-            const label = cost >= 9 ? "9+" : String(cost);
+        {/* Cost Filters */}
+        <Box>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              display: "block",
+              fontWeight: "medium",
+            }}
+          >
+            Cost
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: isMobile ? 0.25 : 0.5,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((cost) => {
+              const isSelected =
+                filters.cost[0] === cost && filters.cost[1] === cost;
+              const isInRange =
+                filters.cost[0] <= cost && filters.cost[1] >= cost;
+              const label = cost >= 9 ? "9+" : String(cost);
 
-            return (
-              <Button
-                key={cost}
-                variant={isSelected ? "contained" : "outlined"}
-                size="small"
-                onClick={() => toggleCost(cost)}
-                sx={{
-                  minWidth: isMobile ? 32 : 40,
-                  height: isMobile ? 32 : 40,
-                  borderRadius: "50%",
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  fontWeight: "bold",
-                  backgroundColor: isSelected
-                    ? "primary.main"
-                    : isInRange
-                    ? "primary.light"
-                    : "transparent",
-                  borderColor: isSelected
-                    ? "primary.main"
-                    : "rgba(255,255,255,0.2)",
-                  color: isSelected || isInRange ? "white" : "text.primary",
-                  "&:hover": {
+              return (
+                <Box
+                  key={cost}
+                  onClick={() => toggleCost(cost)}
+                  sx={{
+                    width: isMobile ? 28 : 32,
+                    height: isMobile ? 28 : 32,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: isMobile ? "0.7rem" : "0.8rem",
+                    fontWeight: "bold",
                     backgroundColor: isSelected
-                      ? "primary.dark"
-                      : "rgba(255,255,255,0.1)",
-                    transform: "scale(1.1)",
-                  },
-                  transition: "all 0.2s ease",
-                }}
-              >
-                {label}
-              </Button>
-            );
-          })}
+                      ? "primary.main"
+                      : isInRange
+                      ? "primary.light"
+                      : "transparent",
+                    border: "1px solid",
+                    borderColor: isSelected
+                      ? "primary.main"
+                      : "rgba(255,255,255,0.2)",
+                    color: isSelected || isInRange ? "white" : "text.primary",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: isSelected
+                        ? "primary.dark"
+                        : "rgba(255,255,255,0.1)",
+                      transform: "scale(1.1)",
+                    },
+                  }}
+                >
+                  {label}
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
-      </Box>
 
-      {/* Active Filter Chips */}
-      {chips.length > 0 && (
-        <Box sx={{ mt: 2 }}>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {chips.map((chip) => (
-              <Box
-                key={chip.key}
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  backgroundColor: `${chip.color}.main`,
-                  color: "white",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 2,
-                  fontSize: "0.75rem",
-                  fontWeight: "medium",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    backgroundColor: `${chip.color}.dark`,
-                    transform: "scale(1.05)",
-                  },
-                }}
-                onClick={chip.onDelete}
-              >
-                {chip.label}
-                <ClearIcon sx={{ ml: 0.5, fontSize: "0.875rem" }} />
-              </Box>
-            ))}
-          </Stack>
-        </Box>
-      )}
+        {/* Active Filter Chips */}
+        {chips.length > 0 && (
+          <Box sx={{ mt: 1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 0.5,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              {chips.map((chip) => (
+                <Chip
+                  key={chip.key}
+                  label={chip.label}
+                  onDelete={chip.onDelete}
+                  color={chip.color}
+                  size="small"
+                  sx={{
+                    fontSize: "0.7rem",
+                    height: 24,
+                    "& .MuiChip-deleteIcon": {
+                      fontSize: "0.8rem",
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }

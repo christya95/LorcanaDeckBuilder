@@ -26,7 +26,7 @@ export default function DeckPreview() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { selectedDeckId, deckLists, decks } = useDecks();
+  const { selectedDeckId, deckLists, decks, saveDeck } = useDecks();
   const { cards, addCard, removeCard } = useStore();
 
   // Get current deck data
@@ -132,33 +132,57 @@ export default function DeckPreview() {
       {/* Header */}
       <Box
         sx={{
-          p: 3,
+          p: 2,
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           background:
             "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)",
           backdropFilter: "blur(20px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
         }}
       >
-        <Typography
-          variant="h5"
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: "bold",
+              color: "white",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+              lineHeight: 1.2,
+            }}
+          >
+            {currentDeck.name}
+          </Typography>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: "rgba(255,255,255,0.85)",
+              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+            }}
+          >
+            {totalCards} cards
+          </Typography>
+        </Box>
+
+        <Button
+          size="small"
+          variant="contained"
+          onClick={() => saveDeck(currentDeck.name)}
           sx={{
-            fontWeight: "bold",
-            color: "white",
-            textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-            mb: 1,
+            textTransform: "none",
+            fontWeight: 600,
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 999,
+            backgroundColor: "#2e7d32",
+            "&:hover": { backgroundColor: "#1b5e20" },
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
           }}
         >
-          {currentDeck.name}
-        </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            color: "rgba(255,255,255,0.8)",
-            textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-          }}
-        >
-          {totalCards} cards
-        </Typography>
+          Save
+        </Button>
       </Box>
 
       {/* Inkable/Uninkable counters */}
@@ -196,13 +220,16 @@ export default function DeckPreview() {
       {/* Pie Charts */}
       <Box
         sx={{
-          p: 2,
+          p: 1.5,
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           background: "rgba(255,255,255,0.03)",
-          display: "flex",
-          justifyContent: "space-around",
-          flexWrap: "wrap",
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(3, 1fr)" },
+          alignItems: "center",
+          justifyItems: "center",
           gap: 1,
+          maxHeight: { xs: 220, md: 240 },
+          overflowY: "auto",
         }}
       >
         {inkColorData.length > 0 && (

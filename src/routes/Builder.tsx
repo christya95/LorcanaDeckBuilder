@@ -9,8 +9,7 @@ import {
   Container,
   useTheme,
 } from "@mui/material";
-import CollectionsIcon from "@mui/icons-material/Collections";
-import TopFilters from "@/components/TopFilters";
+import { SearchFilters } from "@/features/search/components/SearchFilters";
 import CardGrid from "@/components/CardGrid";
 import DeckPreview from "@/components/DeckPreview";
 import { useStore } from "@/store/useStore";
@@ -27,7 +26,14 @@ export default function Builder() {
   const loading = useStore((s) => s.loading);
   const { addToSelectedOrPrompt } = useDecks();
   useSearchInit();
+
+  // Search state
+  const query = useSearch((s) => s.query);
+  const setQuery = useSearch((s) => s.setQuery);
+  const filters = useSearch((s) => s.filters);
+  const setFilters = useSearch((s) => s.setFilters);
   const results = useSearch((s) => s.results);
+
   const [open, setOpen] = useState(false);
   const showDeck = useMediaQuery("(min-width:900px)");
 
@@ -37,7 +43,7 @@ export default function Builder() {
 
   return (
     <Box sx={{ height: "100vh", backgroundColor: "background.default" }}>
-      {/* Fixed filter bar at top */}
+      {/* Fixed filter bar (shifted up under global header) */}
       <Box
         sx={{
           position: "sticky",
@@ -47,14 +53,19 @@ export default function Builder() {
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         }}
       >
-        <TopFilters />
+        <SearchFilters
+          searchQuery={query}
+          filters={filters}
+          onSearchChange={setQuery}
+          onFiltersChange={setFilters}
+        />
       </Box>
 
       {/* Main content area with independent scrolling */}
       <Box
         sx={{
           display: "flex",
-          height: "calc(100vh - 200px)", // Subtract filter height
+          height: "calc(100vh - 140px)", // Subtract filter height (global header handled outside)
           overflow: "hidden", // Prevent body scroll
         }}
       >
@@ -66,6 +77,8 @@ export default function Builder() {
             flexDirection: "column",
             minWidth: 0,
             overflow: "hidden",
+            background:
+              "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", // Distinct card gallery background
           }}
         >
           {/* Results count - fixed */}
@@ -74,7 +87,8 @@ export default function Builder() {
               px: { xs: 1, sm: 2, md: 3 },
               py: 2,
               borderBottom: "1px solid rgba(255,255,255,0.1)",
-              backgroundColor: "background.paper",
+              backgroundColor: "rgba(255,255,255,0.05)",
+              backdropFilter: "blur(10px)",
               flexShrink: 0,
             }}
           >
@@ -148,7 +162,7 @@ export default function Builder() {
               borderRadius: 0,
               boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
               background:
-                "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)",
+                "linear-gradient(135deg, #2d1b69 0%, #11998e 50%, #38ef7d 100%)", // Distinct deck builder background
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255,255,255,0.1)",
             }}
@@ -157,26 +171,6 @@ export default function Builder() {
           </Box>
         )}
       </Box>
-
-      {/* Mobile deck button */}
-      <IconButton
-        color="primary"
-        onClick={() => setOpen(true)}
-        sx={{
-          position: "fixed",
-          bottom: 16,
-          right: 16,
-          display: { xs: "inline-flex", md: "none" },
-          backgroundColor: "primary.main",
-          color: "white",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-          "&:hover": {
-            backgroundColor: "primary.dark",
-          },
-        }}
-      >
-        <CollectionsIcon />
-      </IconButton>
 
       {/* Mobile deck dialog */}
       <Dialog open={open} onClose={() => setOpen(false)} fullScreen>
