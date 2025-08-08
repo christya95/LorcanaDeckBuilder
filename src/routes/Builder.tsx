@@ -7,12 +7,14 @@ import DeckPreview from '@/components/DeckPreview';
 import { useStore } from '@/store/useStore';
 import { useDecks } from '@/store/useDecks';
 import { useSearch } from '@/store/useSearch';
+import { shallow } from 'zustand/shallow';
 
 export default function Builder() {
   const load = useStore(s => s.load);
   const indexReady = useStore(s => s.indexReady);
   const { addToSelectedOrPrompt } = useDecks();
-  const results = useSearch(s => s.results());
+  const [getResults, _query, _filters] = useSearch(s => [s.results, s.query, s.filters], shallow);
+  const results = getResults();
   const [open, setOpen] = useState(false);
   const showDeck = useMediaQuery('(min-width:900px)');
 
