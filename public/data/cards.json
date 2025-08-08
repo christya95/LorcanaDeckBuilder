@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Mickey Mouse",
+    "subtitle": "Brave Little Tailor",
+    "ink": "Ruby",
+    "ink_cost": 3,
+    "card_number": "101",
+    "rarity": "Common",
+    "type": "Character",
+    "classifications": ["Hero"],
+    "lore": 2,
+    "text": "When you play this character, draw a card.",
+    "image_url": "https://files.lorcana.example/mickey.jpg",
+    "set": "The First Chapter",
+    "illustrator": "Disney"
+  },
+  {
+    "id": 2,
+    "name": "Elsa",
+    "subtitle": "Snow Queen",
+    "ink": "Sapphire",
+    "ink_cost": 6,
+    "card_number": "202",
+    "rarity": "Rare",
+    "type": "Character",
+    "classifications": ["Queen", "Sorcerer"],
+    "lore": 3,
+    "text": "Freeze an opposing character.",
+    "image_url": "https://files.lorcana.example/elsa.jpg",
+    "set": "The First Chapter",
+    "illustrator": "Disney"
+  },
+  {
+    "id": 3,
+    "name": "Ariel",
+    "subtitle": "Treasure Hunter",
+    "ink": "Emerald",
+    "ink_cost": 2,
+    "card_number": "303",
+    "rarity": "Uncommon",
+    "type": "Character",
+    "classifications": ["Princess"],
+    "lore": 1,
+    "text": "Gain +1 lore when you sing.",
+    "image_url": "https://files.lorcana.example/ariel.jpg",
+    "set": "The First Chapter",
+    "illustrator": "Disney"
+  }
+]
