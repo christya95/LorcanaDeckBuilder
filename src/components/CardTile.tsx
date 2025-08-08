@@ -1,36 +1,33 @@
 import { Card as CardType } from '../types';
 import { Card, CardMedia, CardActions, IconButton, Chip, Stack } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { useDecks } from '../store/useDecks';
 
 interface Props {
   card: CardType;
   count: number;
-  onAdd: (id: number) => void;
-  onRemove: (id: number) => void;
 }
 
-export default function CardTile({ card, count, onAdd, onRemove }: Props) {
+export default function CardTile({ card, count }: Props) {
+  const { addToSelectedOrPrompt, dec, selectedDeckId } = useDecks();
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedDeckId) dec(selectedDeckId, card.id);
+  };
+  const src = card.image_url || (card as any).image || '/art/card-ph.svg';
   return (
-    <Card sx={{ position: 'relative' }}>
-      {card.image_url ? (
-        <CardMedia component="img" image={card.image_url} alt={card.name} loading="lazy" />
-      ) : (
-        <CardMedia component="div" sx={{ height: 140, bgcolor: 'grey.800' }} />
-      )}
-      <CardActions sx={{ position: 'absolute', bottom: 0, right: 0 }}>
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          {count > 0 && <Chip label={count} color="primary" size="small" />}
-          <IconButton color="primary" size="small" onClick={() => onAdd(card.id)}>
-            <AddIcon fontSize="small" />
-          </IconButton>
-          {count > 0 && (
-            <IconButton color="primary" size="small" onClick={() => onRemove(card.id)}>
+    <Card sx={{ position: 'relative', cursor: 'pointer' }} onClick={() => addToSelectedOrPrompt(card)}>
+      <CardMedia component="img" image={src} alt={card.name} loading="lazy" width={300} height={420} />
+      {count > 0 && (
+        <CardActions sx={{ position: 'absolute', bottom: 0, right: 0 }}>
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Chip label={count} color="primary" size="small" />
+            <IconButton color="primary" size="small" onClick={handleRemove}>
               <RemoveIcon fontSize="small" />
             </IconButton>
-          )}
-        </Stack>
-      </CardActions>
+          </Stack>
+        </CardActions>
+      )}
     </Card>
   );
 }

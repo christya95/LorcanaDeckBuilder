@@ -13,10 +13,10 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import Masonry from '@mui/lab/Masonry';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CardTile from '../components/CardTile';
+import CardGrid from '../components/CardGrid';
+import DeckPreview from '../components/DeckPreview';
 import { useStore } from '../store/useStore';
 import { useDecks } from '../store/useDecks';
 
@@ -25,7 +25,7 @@ export default function Cards() {
   const cards = useStore(s => s.cards);
   const filters = useStore(s => s.filters);
   const setFilters = useStore(s => s.setFilters);
-  const { addCard, removeCard, countInSelectedDeck, selectedDeckId } = useDecks();
+  const { countInSelectedDeck } = useDecks();
   const indexReady = useStore(s => s.indexReady);
   const query = useStore(s => s.query);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -67,21 +67,18 @@ export default function Cards() {
           ))}
         </Stack>
       </Stack>
-      {indexReady ? (
-        <Masonry columns={{ xs: 1, sm: 2, md: 3, lg: 4, xl: 6 }} spacing={2}>
-          {filtered.map(card => (
-            <CardTile
-              key={card.id}
-              card={card}
-              count={countInSelectedDeck(card.id)}
-              onAdd={() => selectedDeckId && addCard(selectedDeckId, card.id)}
-              onRemove={() => selectedDeckId && removeCard(selectedDeckId, card.id)}
-            />
-          ))}
-        </Masonry>
-      ) : (
-        <Typography>Loading...</Typography>
-      )}
+      <Box display="flex" gap={2}>
+        <Box flex={1} minHeight={600}>
+          {indexReady ? (
+            <CardGrid cards={filtered} counts={countInSelectedDeck} />
+          ) : (
+            <Typography>Loading...</Typography>
+          )}
+        </Box>
+        <Box display={{ xs: 'none', md: 'block' }}>
+          <DeckPreview />
+        </Box>
+      </Box>
       <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 250, p: 2 }}>
           <Accordion defaultExpanded>
