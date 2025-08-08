@@ -18,14 +18,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CardGrid from '../components/CardGrid';
 import DeckPreview from '../components/DeckPreview';
 import { useStore } from '../store/useStore';
-import { useDecks } from '../store/useDecks';
 
 export default function Cards() {
   const load = useStore(s => s.load);
   const cards = useStore(s => s.cards);
   const filters = useStore(s => s.filters);
   const setFilters = useStore(s => s.setFilters);
-  const { countInSelectedDeck } = useDecks();
   const indexReady = useStore(s => s.indexReady);
   const query = useStore(s => s.query);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -70,7 +68,7 @@ export default function Cards() {
       <Box display="flex" gap={2}>
         <Box flex={1} minHeight={600}>
           {indexReady ? (
-            <CardGrid cards={filtered} counts={countInSelectedDeck} />
+            <CardGrid cards={filtered} />
           ) : (
             <Typography>Loading...</Typography>
           )}

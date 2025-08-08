@@ -62,25 +62,25 @@ export const useDecks = () => {
   };
 
   function computeStats(rows: { count: number; snapshot: Card }[]) {
-    const stats = {
-      total: 0,
-      inkable: 0,
-      uninkable: 0,
-      types: {} as Record<string, number>,
-      curve: Array.from({ length: 10 }, (_, i) => ({ cost: i < 9 ? String(i) : '9+', count: 0 })),
-    };
-    for (const { count, snapshot } of rows) {
-      stats.total += count;
-      const inkable = snapshot.inkable ?? !(/uninkable/i.test(snapshot.text || ''));
-      if (inkable) stats.inkable += count; else stats.uninkable += count;
-      const type = snapshot.type?.split('/')[0] || 'Other';
-      stats.types[type] = (stats.types[type] || 0) + count;
-      const cost = snapshot.ink_cost ?? 0;
-      const idx = cost >= 9 ? 9 : cost;
-      stats.curve[idx].count += count;
+      const stats = {
+        total: 0,
+        inkable: 0,
+        uninkable: 0,
+        types: {} as Record<string, number>,
+        curve: Array.from({ length: 9 }, (_, i) => ({ cost: i < 8 ? String(i + 1) : '9+', count: 0 })),
+      };
+      for (const { count, snapshot } of rows) {
+        stats.total += count;
+        const isInkable = (snapshot as any).inkable ?? !(/uninkable/i.test(snapshot.text || ''));
+        if (isInkable) stats.inkable += count; else stats.uninkable += count;
+        const type = snapshot.type?.split('/')[0] || 'Other';
+        stats.types[type] = (stats.types[type] || 0) + count;
+        const cost = snapshot.ink_cost ?? 0;
+        const idx = cost >= 9 ? 8 : Math.max(0, cost - 1);
+        stats.curve[idx].count += count;
+      }
+      return stats;
     }
-    return stats;
-  }
 
   const stats = () => computeStats(deckCards());
 
