@@ -4,7 +4,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useDecks } from '../store/useDecks';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import SaveDeckDialog from './SaveDeckDialog';
 
 const SECTIONS = ['Character', 'Action', 'Item', 'Song', 'Location'];
@@ -14,6 +14,27 @@ export default function DeckPreview() {
   const [open, setOpen] = useState(false);
   const rows = deckCards(selectedDeckId || undefined);
   const s = stats();
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [chartReady, setChartReady] = useState(false);
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') {
+      setChartReady(true);
+      return;
+    }
+    const el = chartRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const e of entries) {
+        if (e.contentRect.width && e.contentRect.height) {
+          setChartReady(true);
+          ro.disconnect();
+          break;
+        }
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const groups: Record<string, typeof rows> = {} as any;
   SECTIONS.forEach(t => (groups[t] = []));
@@ -67,14 +88,16 @@ export default function DeckPreview() {
         <Chip label={`Inkable ${s.inkable}`} color="primary" size="small" />
         <Chip label={`Uninkable ${s.uninkable}`} color="secondary" size="small" />
       </Stack>
-      <Box sx={{ height: 120 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={s.curve}>
-            <XAxis dataKey="cost" tickLine={false} />
-            <YAxis allowDecimals={false} tickLine={false} />
-            <Bar dataKey="count" fill="#8884d8" />
-          </BarChart>
-        </ResponsiveContainer>
+      <Box sx={{ height: 120 }} ref={chartRef}>
+        {chartReady && (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={s.curve}>
+              <XAxis dataKey="cost" tickLine={false} />
+              <YAxis allowDecimals={false} tickLine={false} />
+              <Bar dataKey="count" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </Box>
       <SaveDeckDialog open={open} onClose={() => setOpen(false)} onSave={(name) => saveDeck(name)} />
     </Box>
