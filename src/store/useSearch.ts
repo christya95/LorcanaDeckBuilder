@@ -16,7 +16,7 @@ interface SearchState {
   query: string;
   setQuery: (q: string) => void;
   filters: Filters;
-  setFilters: (f: Partial<Filters>) => void;
+  setFilters: (f: Partial<Filters> | ((prev: Filters) => Partial<Filters>)) => void;
   clearFilters: () => void;
   index: elasticlunr.Index<Card> | null;
   buildIndex: (cards: Card[]) => void;
@@ -31,9 +31,11 @@ export const useSearch = create<SearchState>((set, get) => ({
     if (get().query !== q) set({ query: q });
   },
   filters: DEFAULT_FILTERS,
-  setFilters: (f: Partial<Filters>) => {
-    const next = { ...get().filters, ...f };
-    if (shallow(get().filters, next)) return;
+  setFilters: (f: Partial<Filters> | ((prev: Filters) => Partial<Filters>)) => {
+    const currentFilters = get().filters;
+    const update = typeof f === 'function' ? f(currentFilters) : f;
+    const next = { ...currentFilters, ...update };
+    if (shallow(currentFilters, next)) return;
     set({ filters: next });
   },
   clearFilters: () => set({ query: '', filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' } }),
@@ -92,5 +94,11 @@ export const useSearch = create<SearchState>((set, get) => ({
 export const useSearchInit = () => {
   const cards = useStore(s => s.cards);
   const buildIndex = useSearch(s => s.buildIndex);
-  useEffect(() => { if (cards.length) buildIndex(cards); }, [cards.length, buildIndex]);
+  
+  useEffect(() => { 
+    if (cards.length) {
+      console.log(`Building search index for ${cards.length} cards`);
+      buildIndex(cards); 
+    }
+  }, [cards.length]); // Remove buildIndex from dependencies since it's stable
 };

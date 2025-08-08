@@ -14,6 +14,7 @@ export interface Card {
   image?: string;
   set: string;
   illustrator?: string;
+  inkable?: boolean;
 }
 
 export interface DeckList {
@@ -29,8 +30,7 @@ export interface DeckMeta {
 
 export interface Filters {
   inks: string[];
-  rarities: string[];
-  types: string[];
-  sets: string[];
   cost: [number, number];
+  types?: string[];
+  inkable: 'any' | 'inkable' | 'uninkable';
 }
