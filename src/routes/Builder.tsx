@@ -45,7 +45,7 @@ export default function Builder() {
         <CollectionsIcon />
       </IconButton>
       <Dialog open={open} onClose={() => setOpen(false)} fullScreen>
-        <DeckPreview />
+        {open && <DeckPreview />}
       </Dialog>
     </Box>
   );
