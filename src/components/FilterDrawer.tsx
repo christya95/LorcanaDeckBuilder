@@ -20,7 +20,8 @@ interface Props {
 }
 
 export default function FilterDrawer({ open, onClose }: Props) {
-  const { filters, setFilters } = useSearch();
+  const filters = useSearch(s => s.filters);
+  const setFilters = useSearch(s => s.setFilters);
   const cost = filters.cost || [1, 9];
 
   const toggleInk = (ink: string) => {

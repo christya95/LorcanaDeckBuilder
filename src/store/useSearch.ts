@@ -26,10 +26,12 @@ const DEFAULT_FILTERS: Filters = { inks: [], cost: [1, 9], types: [], inkable: '
 
 export const useSearch = create<SearchState>((set, get) => ({
   query: '',
-  setQuery: (q: string) => set({ query: q }),
+  setQuery: (q: string) => {
+    if (get().query !== q) set({ query: q });
+  },
   filters: DEFAULT_FILTERS,
   setFilters: (f: Partial<Filters>) => set({ filters: { ...get().filters, ...f } }),
-  clearFilters: () => set({ query: '', filters: DEFAULT_FILTERS }),
+  clearFilters: () => set({ query: '', filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' } }),
   index: null,
   buildIndex: (cards: Card[]) => {
     const idx = elasticlunr<Card>();
