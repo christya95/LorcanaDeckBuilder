@@ -1,13 +1,22 @@
 import { Stack, TextField, Chip, IconButton } from "@mui/material";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import ClearIcon from "@mui/icons-material/Clear";
-import { useSearch, useSearchInit } from "@/store/useSearch";
+import { useSearch } from "@/store/useSearch";
 import FilterDrawer from "./FilterDrawer";
 import { useState } from "react";
+import { shallow } from "zustand/shallow";
 
 export default function TopFilters() {
-  useSearchInit();
-  const { query, setQuery, filters, setFilters, clearFilters } = useSearch();
+  const { query, setQuery, filters, setFilters, clearFilters } = useSearch(
+    s => ({
+      query: s.query,
+      setQuery: s.setQuery,
+      filters: s.filters,
+      setFilters: s.setFilters,
+      clearFilters: s.clearFilters,
+    }),
+    shallow,
+  );
   const [open, setOpen] = useState(false);
   const cost = filters.cost ?? [1, 9];
 
