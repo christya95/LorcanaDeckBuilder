@@ -1,6 +1,4 @@
 import { AppBar, Toolbar, Typography, Button, Stack, Container } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import BuildIcon from '@mui/icons-material/Build';
 import InfoIcon from '@mui/icons-material/Info';
 import CollectionsIcon from '@mui/icons-material/Collections';
@@ -15,13 +13,7 @@ export default function Header() {
             Lorcana
           </Typography>
           <Stack direction="row" spacing={1}>
-            <Button color="inherit" startIcon={<HomeIcon />} component={RouterLink} to="/">
-              Home
-            </Button>
-            <Button color="inherit" startIcon={<ViewModuleIcon />} component={RouterLink} to="/cards">
-              Cards
-            </Button>
-            <Button color="inherit" startIcon={<BuildIcon />} component={RouterLink} to="/builder">
+            <Button color="inherit" startIcon={<BuildIcon />} component={RouterLink} to="/">
               Builder
             </Button>
             <Button color="inherit" startIcon={<CollectionsIcon />} component={RouterLink} to="/decks">

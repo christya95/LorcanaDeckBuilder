@@ -5,21 +5,29 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 interface Props {
   cards: Card[];
-  counts: (id: number) => number;
+  onCardClick?: (card: Card) => void;
 }
 
-const CARD_W = 180;
-const CARD_H = 260;
+const TILE_W = 240;
+const TILE_H = (240 * 4) / 3 + 56; // 3:4 art + title
+const GAP = 20;
 
-export default function CardGrid({ cards, counts }: Props) {
+export default function CardGrid({ cards, onCardClick }: Props) {
   const Cell = ({ columnIndex, rowIndex, style, data }: GridChildComponentProps) => {
-    const { cards, columnCount } = data;
+    const { cards, columnCount, onCardClick } = data as any;
     const index = rowIndex * columnCount + columnIndex;
     if (index >= cards.length) return null;
     const card = cards[index];
+    const cellStyle: React.CSSProperties = {
+      ...style,
+      left: (style.left as number) + GAP,
+      top: (style.top as number) + GAP,
+      width: TILE_W,
+      height: TILE_H,
+    };
     return (
-      <div style={style} className="p-2">
-        <CardTile card={card} count={counts(card.id)} />
+      <div style={cellStyle}>
+        <CardTile card={card} onCardClick={onCardClick} />
       </div>
     );
   };
@@ -27,17 +35,17 @@ export default function CardGrid({ cards, counts }: Props) {
   return (
     <AutoSizer>
       {({ width, height }) => {
-        const columnCount = Math.max(1, Math.floor(width / CARD_W));
+        const columnCount = Math.max(1, Math.floor((width + GAP) / (TILE_W + GAP)));
         const rowCount = Math.ceil(cards.length / columnCount);
         return (
           <Grid
             columnCount={columnCount}
-            columnWidth={CARD_W}
+            columnWidth={TILE_W + GAP}
             height={height}
             rowCount={rowCount}
-            rowHeight={CARD_H}
+            rowHeight={TILE_H + GAP}
             width={width}
-            itemData={{ cards, columnCount }}
+            itemData={{ cards, columnCount, onCardClick }}
           >
             {Cell}
           </Grid>
