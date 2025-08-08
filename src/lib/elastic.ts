@@ -1,10 +1,10 @@
-import elasticlunr from 'elasticlunr';
+import elasticlunr, { type Index } from 'elasticlunr';
 import type { Card } from '../types';
 
-export type CardIndex = elasticlunr.Index<Card>;
+export type CardIndex = Index<Card>;
 
 export function buildIndex(cards: Card[]): CardIndex {
-  const index = elasticlunr<Card>(function () {
+  const index = elasticlunr<Card>(function (this: Index<Card>) {
     this.setRef('id');
     this.addField('name', { boost: 5 });
     this.addField('subtitle', { boost: 3 });

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
 import elasticlunr from 'elasticlunr';
+import type { Index } from 'elasticlunr';
 import { useStore } from './useStore';
 import type { Card } from '../types';
 
@@ -25,7 +26,7 @@ interface SearchState {
 
 const DEFAULT_FILTERS: Filters = { inks: [], types: [], rarities: [], sets: [], cost: [1,9], inkable: 'any' };
 
-let index: elasticlunr.Index<Card> | null = null;
+let index: Index<Card> | null = null;
 
 export const useSearch = create<SearchState>((set, get) => ({
   query: '',
@@ -34,7 +35,7 @@ export const useSearch = create<SearchState>((set, get) => ({
   setFilters: (f: Partial<Filters>) => set({ filters: { ...get().filters, ...f } }),
   clearFilters: () => set({ query: '', filters: DEFAULT_FILTERS }),
   buildIndex: (cards: Card[]) => {
-    index = elasticlunr<Card>(function () {
+    index = elasticlunr<Card>(function (this: Index<Card>) {
       this.addField('name');
       this.addField('subtitle');
       this.addField('text');

@@ -1,7 +1,7 @@
 import { db } from '../lib/dexie';
 import { buildIndex } from '../lib/elastic';
 import type { Card } from '../types';
-import elasticlunr from 'elasticlunr';
+import type { Index } from 'elasticlunr';
 
 const SETS = ["TFC","ROTF","ITI","UR","SDS","INKBOUND"];
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/LorcanaJSON/LorcanaJSON@latest/cards';
@@ -28,7 +28,7 @@ function normalize(cards: Card[]): Card[] {
   return Array.from(map.values());
 }
 
-export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.Index<Card> }> {
+export async function loadCards(): Promise<{ cards: Card[]; index: Index<Card> }> {
   const cached = await db.cards.toArray();
   if (cached && cached.length) {
     const index = buildIndex(cached);

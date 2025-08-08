@@ -75,7 +75,7 @@ export default function FilterDrawer({ open, onClose }: Props) {
               min={1}
               max={9}
               value={cost}
-              onChange={(_, v) => setFilters({ cost: v as number[] })}
+              onChange={(_, v) => setFilters({ cost: v as [number, number] })}
               valueLabelDisplay="auto"
               valueLabelFormat={(v)=> v===9 ? "9+" : v}
               marks={[1,2,3,4,5,6,7,8,9].map(v=>({ value:v, label: v===9?"9+":String(v)}))}
