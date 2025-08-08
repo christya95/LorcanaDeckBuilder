@@ -1,7 +1,7 @@
 import { db } from '../lib/dexie';
 import { buildIndex } from '../lib/elastic';
 import type { Card } from '../types';
-import elasticlunr from 'elasticlunr';
+import type elasticlunr from 'elasticlunr';
 
 const REMOTE_BASE = 'https://raw.githubusercontent.com/LorcanaJSON/LorcanaJSON/main/EN';
 
@@ -9,7 +9,7 @@ export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.I
   // Try cache
   const cached = await db.cards.toArray();
   if (cached && cached.length) {
-    const index = buildIndex(cached);
+    const index = await buildIndex(cached);
     return { cards: cached, index };
   }
   try {
@@ -18,7 +18,7 @@ export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.I
       const data = await res.json();
       const cards: Card[] = data.cards || data;
       await db.cards.bulkPut(cards);
-      const index = buildIndex(cards);
+      const index = await buildIndex(cards);
       return { cards, index };
     }
   } catch (e) {
@@ -26,6 +26,6 @@ export async function loadCards(): Promise<{ cards: Card[]; index: elasticlunr.I
   }
   const local = await fetch('/data/cards.json').then(r => r.json());
   const cards: Card[] = local;
-  const index = buildIndex(cards);
+  const index = await buildIndex(cards);
   return { cards, index };
 }
