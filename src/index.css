@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  color: #f8fafc;
+  background-color: #0b1e39;
+  min-height: 100vh;
+  background-image: radial-gradient(white, rgba(255,255,255,0.2) 2px, transparent 4px), radial-gradient(white, rgba(255,255,255,0.15) 1px, transparent 3px);
+  background-position: 0 0, 50px 50px;
+  background-size: 100px 100px;
+  animation: stars 60s linear infinite;
+}
+
+@keyframes stars {
+  from { background-position: 0 0, 50px 50px; }
+  to { background-position: -10000px 0, -9950px 50px; }
+}
