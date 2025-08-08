@@ -3,33 +3,52 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useSearch } from "@/store/useSearch";
 import FilterDrawer from "./FilterDrawer";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { shallow } from "zustand/shallow";
 
 export default function TopFilters() {
-  const query = useSearch(s => s.query);
-  const setQuery = useSearch(s => s.setQuery);
-  const filters = useSearch(s => s.filters);
-  const setFilters = useSearch(s => s.setFilters);
-  const clearFilters = useSearch(s => s.clearFilters);
+  const [query, setQuery, filters, setFilters, clearFilters] = useSearch(
+    s => [s.query, s.setQuery, s.filters, s.setFilters, s.clearFilters],
+    shallow
+  );
   const [open, setOpen] = useState(false);
   const cost = filters.cost ?? [1, 9];
 
-  const chips = useMemo(() => [
-    ...(filters.inks || []).map(i => ({
-      label: i,
-      onDelete: () => setFilters({ inks: (filters.inks || []).filter(x => x !== i) }),
-    })),
-    ...(filters.types || []).map(t => ({
-      label: t,
-      onDelete: () => setFilters({ types: (filters.types || []).filter(x => x !== t) }),
-    })),
-    ...(filters.inkable && filters.inkable !== 'any'
-      ? [{ label: filters.inkable === 'inkable' ? 'Inkable' : 'Uninkable', onDelete: () => setFilters({ inkable: 'any' }) }]
-      : []),
-    ...((cost[0] !== 1 || cost[1] !== 9)
-      ? [{ label: `${cost[0]}-${cost[1] === 9 ? '9+' : cost[1]}`, onDelete: () => setFilters({ cost: [1, 9] }) }]
-      : []),
-  ], [filters, setFilters, cost]);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setQuery(e.target.value);
+    },
+    [setQuery]
+  );
+
+  const chips = useMemo(() => {
+    const chipList: Array<{ label: string; onDelete: () => void }> = [];
+    (filters.inks || []).forEach(i => {
+      chipList.push({
+        label: i,
+        onDelete: () => setFilters({ inks: (filters.inks || []).filter(x => x !== i) }),
+      });
+    });
+    (filters.types || []).forEach(t => {
+      chipList.push({
+        label: t,
+        onDelete: () => setFilters({ types: (filters.types || []).filter(x => x !== t) }),
+      });
+    });
+    if (filters.inkable && filters.inkable !== 'any') {
+      chipList.push({
+        label: filters.inkable === 'inkable' ? 'Inkable' : 'Uninkable',
+        onDelete: () => setFilters({ inkable: 'any' }),
+      });
+    }
+    if (cost[0] !== 1 || cost[1] !== 9) {
+      chipList.push({
+        label: `${cost[0]}-${cost[1] === 9 ? '9+' : cost[1]}`,
+        onDelete: () => setFilters({ cost: [1, 9] }),
+      });
+    }
+    return chipList;
+  }, [filters]);
 
   return (
     <>
@@ -40,7 +59,7 @@ export default function TopFilters() {
           size="small"
           placeholder="Search cards…"
           value={query}
-          onChange={(e)=>setQuery(e.target.value)}
+          onChange={handleChange}
           sx={{ flex: { xs: '1 0 100%', md: '0 0 260px' } }}
         />
         {chips.map(c => (

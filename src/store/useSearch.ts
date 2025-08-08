@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useStore } from './useStore';
 import { useEffect } from 'react';
 import elasticlunr from 'elasticlunr';
+import { shallow } from 'zustand/shallow';
 import type { Card } from '../types';
 
 interface Filters {
@@ -30,7 +31,11 @@ export const useSearch = create<SearchState>((set, get) => ({
     if (get().query !== q) set({ query: q });
   },
   filters: DEFAULT_FILTERS,
-  setFilters: (f: Partial<Filters>) => set({ filters: { ...get().filters, ...f } }),
+  setFilters: (f: Partial<Filters>) => {
+    const next = { ...get().filters, ...f };
+    if (shallow(get().filters, next)) return;
+    set({ filters: next });
+  },
   clearFilters: () => set({ query: '', filters: { inks: [], cost: [1, 9], types: [], inkable: 'any' } }),
   index: null,
   buildIndex: (cards: Card[]) => {
